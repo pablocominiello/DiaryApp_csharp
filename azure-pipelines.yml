@@ -24,10 +24,6 @@ stages:
           azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
           command: 'restore'
           feedsToUse: 'select'
-
-  - stage: Build
-    dependsOn: Restore
-    jobs:
     - job: build    
       steps:
       - task: NuGetToolInstaller@1
@@ -40,10 +36,6 @@ stages:
           msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
-
-  - stage: Test
-    dependsOn: Build
-    jobs:  
     - job: test
       steps:      
       - task: VSTest@2
@@ -51,9 +43,6 @@ stages:
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
 
-  - stage: Publish
-    dependsOn: Test
-    jobs:
     - job: publish
       steps:
       - task: DotNetCoreCLI@2
@@ -61,9 +50,6 @@ stages:
           azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
           command: 'publish'
           publishWebProjects: true
-  - stage: PublishArtifacts
-    dependsOn: Publish
-    jobs:
     - job: PublishArtifacts
       steps:
       - task: PublishBuildArtifacts@1
