@@ -15,7 +15,7 @@ variables:
   buildConfiguration: 'Release'
 
 stages:
-  - stage: Build_csharp
+  - stage: Build
     jobs:
     - job: build
       steps:
@@ -33,6 +33,7 @@ stages:
           configuration: '$(buildConfiguration)'
 
   - stage: Test
+    dependsOn: Build
     jobs:  
     - job: test
       steps:      
@@ -42,6 +43,7 @@ stages:
           configuration: '$(buildConfiguration)'
 
   - stage: Publish
+    dependsOn: Test
     jobs:
     - job: publish
       steps:
