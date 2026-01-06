@@ -17,7 +17,7 @@ variables:
 stages:
   - stage: DiaryApp_csharp
     jobs:
-    - job: Test
+    - job: Build
       steps:
       - task: NuGetToolInstaller@1
 
