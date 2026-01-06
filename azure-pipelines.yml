@@ -17,7 +17,7 @@ variables:
 stages:
   - stage: DiaryApp_csharp
     jobs:
-    - job: Build
+    - job: build
       steps:
       - task: NuGetToolInstaller@1
 
@@ -31,12 +31,16 @@ stages:
           msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
-
+    
+    - job: test
+      steps:      
       - task: VSTest@2
         inputs:
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
 
+    - job: publish
+      steps:
       - task: DotNetCoreCLI@2
         inputs:
           azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
