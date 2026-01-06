@@ -26,6 +26,7 @@ stages:
           feedsToUse: 'select'
 
   - stage: Build
+    dependsOn: Restore
     jobs:
     - job: build    
       steps:
@@ -60,3 +61,13 @@ stages:
           azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
           command: 'publish'
           publishWebProjects: true
+  - stage: PublishArtifacts
+    dependsOn: Publish
+    jobs:
+    - job: PublishArtifacts
+      steps:
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          ArtifactName: 'drop'
+          publishLocation: 'Container'
