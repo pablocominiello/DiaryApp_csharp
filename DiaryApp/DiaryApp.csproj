@@ -14,9 +14,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
 
-    <!-- Nerdbank.GitVersioning: computes version from Git history & tags -->
-    <PackageReference Include="Nerdbank.GitVersioning" Version="3.5.109" PrivateAssets="all" />
-
   </ItemGroup>
 
   <ItemGroup>
