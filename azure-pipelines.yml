@@ -15,7 +15,7 @@ variables:
   buildConfiguration: 'Release'
 
 stages:
-  - stage: DiaryApp_csharp
+  - stage: Build_csharp
     jobs:
     - job: build
       steps:
@@ -31,7 +31,9 @@ stages:
           msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
-    
+
+  - stage: Test
+    jobs:  
     - job: test
       steps:      
       - task: VSTest@2
@@ -39,6 +41,8 @@ stages:
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
 
+  - stage: Publish
+    jobs:
     - job: publish
       steps:
       - task: DotNetCoreCLI@2
