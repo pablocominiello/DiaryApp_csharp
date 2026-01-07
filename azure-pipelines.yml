@@ -17,14 +17,15 @@ variables:
 stages:
   - stage: DiaryApp_deploy
     jobs:
-    - job: Restore  
+    - job: restore      
       steps:
       - task: DotNetCoreCLI@2
         inputs:
           azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
           command: 'restore'
           feedsToUse: 'select'
-    - job: build    
+    - job: build
+      dependsOn: restore  
       steps:
       - task: NuGetToolInstaller@1
       - task: NuGetCommand@2
@@ -39,6 +40,7 @@ stages:
       - script: echo DiaryApp log 001
 
     - job: test
+      dependsOn: build
       steps:      
       - task: VSTest@2
         inputs:
@@ -46,6 +48,7 @@ stages:
           configuration: '$(buildConfiguration)'
 
     - job: publish
+      dependsOn: test
       steps:
       - task: DotNetCoreCLI@2
         inputs:
@@ -53,6 +56,7 @@ stages:
           command: 'publish'
           publishWebProjects: true
     - job: PublishArtifacts
+      dependsOn: publish
       steps:
       - task: PublishBuildArtifacts@1
         inputs:
