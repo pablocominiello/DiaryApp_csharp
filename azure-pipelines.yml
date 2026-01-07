@@ -1,8 +1,3 @@
-# ASP.NET Core (.NET Framework)
-# Build and test ASP.NET Core projects targeting the full .NET Framework.
-# Add steps that publish symbols, save build artifacts, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
-
 trigger:
 - master
 
@@ -15,55 +10,31 @@ variables:
   buildConfiguration: 'Release'
 
 stages:
-  - stage: DiaryApp_deploy
-    jobs:
+- stage: DiaryApp_deploy
+  jobs:
+  - job: build
+    steps:
+    - task: NuGetToolInstaller@1
 
-    - job: restore      
-      steps:
-      - task: DotNetCoreCLI@2
-        inputs:
-          azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
-          command: 'restore'
-          feedsToUse: 'select'
+    - task: NuGetCommand@2
+      inputs:
+        restoreSolution: '$(solution)'
 
-    - job: build
-      dependsOn: restore  
-      steps:
-      - task: NuGetToolInstaller@1
-      - task: NuGetCommand@2
-        inputs:
-          restoreSolution: '$(solution)'
-      - task: VSBuild@1
-        inputs:
-          solution: '$(solution)'
-          msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="DiaryApp"'
-          platform: '$(buildPlatform)'
-          configuration: '$(buildConfiguration)'
-      - script: dir
+    - task: VSBuild@1
+      inputs:
+        solution: '$(solution)'
+        msbuildArgs: >
+          /p:DeployOnBuild=true
+          /p:WebPublishMethod=Package
+          /p:PackageAsSingleFile=true
+          /p:SkipInvalidConfigurations=true
+          /p:DesktopBuildPackageLocation="$(Build.ArtifactStagingDirectory)\WebApp.zip"
+          /p:DeployIisAppPath="DiaryApp"
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
 
-    - job: test
-      dependsOn: build
-      steps:      
-      - task: VSTest@2
-        inputs:
-          platform: '$(buildPlatform)'
-          configuration: '$(buildConfiguration)'
-
-    - job: publish
-      dependsOn: test
-      steps:
-      - task: DotNetCoreCLI@2
-        inputs:          
-          command: 'publish'
-          publishWebProjects: true
-          arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-
-    - job: PublishArtifacts
-      dependsOn: publish
-      steps:
-      - script: dir
-      - task: PublishBuildArtifacts@1
-        inputs:
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)'       
-          ArtifactName: 'DiaryApp'
-          publishLocation: 'Container'
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'WebApp'
+        publishLocation: 'Container'
