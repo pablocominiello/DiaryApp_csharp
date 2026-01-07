@@ -17,6 +17,7 @@ variables:
 stages:
   - stage: DiaryApp_deploy
     jobs:
+
     - job: restore      
       steps:
       - task: DotNetCoreCLI@2
@@ -24,6 +25,7 @@ stages:
           azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
           command: 'restore'
           feedsToUse: 'select'
+
     - job: build
       dependsOn: restore  
       steps:
@@ -34,7 +36,7 @@ stages:
       - task: VSBuild@1
         inputs:
           solution: '$(solution)'
-          msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+          msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="DiaryApp"'
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
       - script: dir
@@ -62,5 +64,5 @@ stages:
       - task: PublishBuildArtifacts@1
         inputs:
           PathtoPublish: '$(Build.ArtifactStagingDirectory)'       
-          ArtifactName: 'DiaryApp'
+          ArtifactName: 'DiaryApp.dll'
           publishLocation: 'Container'
