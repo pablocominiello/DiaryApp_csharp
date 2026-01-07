@@ -10,7 +10,7 @@ variables:
   buildConfiguration: 'Release'
 
 stages:
-- stage: DiaryApp_deploy
+- stage: Build
   jobs:
   - job: build
     steps:
@@ -38,3 +38,14 @@ stages:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'WebApp'
         publishLocation: 'Container'
+
+- stage: Deploy
+  dependsOn: Build
+  jobs:
+  - job: deploy
+    steps:
+    - task: AzureWebApp@1
+      inputs:
+        azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)' # tu Service Connection
+        appName: 'dev-diaryapp-c2cuanhkf2f6axee.canadacentral-01.azurewebsites.net' # nombre exacto del App Service
+        package: '$(Pipeline.Workspace)/WebApp/WebApp.zip'
