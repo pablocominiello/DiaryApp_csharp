@@ -15,9 +15,17 @@ variables:
   buildConfiguration: 'Release'
 
 stages:
-  - stage: Build
+  - stage: DiaryApp_deploy
     jobs:
-    - job: build    
+    - job: restore      
+      steps:
+      - task: DotNetCoreCLI@2
+        inputs:
+          azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
+          command: 'restore'
+          feedsToUse: 'select'
+    - job: build
+      dependsOn: restore  
       steps:
       - task: NuGetToolInstaller@1
       - task: NuGetCommand@2
@@ -29,24 +37,29 @@ stages:
           msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
+      - script: echo DiaryApp log 001
 
-  - stage: Test
-    dependsOn: Build
-    jobs:  
     - job: test
+      dependsOn: build
       steps:      
       - task: VSTest@2
         inputs:
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
 
-  - stage: Publish
-    dependsOn: Test
-    jobs:
     - job: publish
+      dependsOn: test
       steps:
       - task: DotNetCoreCLI@2
         inputs:
           azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
           command: 'publish'
           publishWebProjects: true
+    - job: PublishArtifacts
+      dependsOn: publish
+      steps:
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          ArtifactName: 'DiaryApp'
+          publishLocation: 'Container'
