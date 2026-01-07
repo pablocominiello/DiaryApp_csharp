@@ -8,9 +8,9 @@ variables:
   buildConfiguration: 'Release'
   azureServiceConnection: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)' # replace with your service connection name
   webAppName: 'prod-DiaryApp'
-  artifactName: 'WebApp'
+  artifactName: 'DiaryApp'
   publishDir: '$(Build.ArtifactStagingDirectory)/publish'
-  packageZip: '$(Build.ArtifactStagingDirectory)/WebApp.zip'
+  packageZip: '$(Build.ArtifactStagingDirectory)/DiaryApp.zip'
 
 stages:
 - stage: Build
@@ -68,7 +68,7 @@ stages:
         azureSubscription: '$(azureServiceConnection)'
         appType: 'webApp'
         appName: '$(webAppName)'
-        package: '$(Pipeline.Workspace)/$(artifactName)/WebApp.zip'
+        package: '$(Pipeline.Workspace)/$(artifactName)/DiaryApp.zip'
         deploymentMethod: 'zipDeploy'
         takeAppOfflineFlag: true
         removeAdditionalFilesFlag: true
