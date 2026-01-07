@@ -6,11 +6,6 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  azureServiceConnection: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)' # replace with your service connection name
-  webAppName: 'prod-DiaryApp'
-  artifactName: 'WebApp'
-  publishDir: '$(Build.ArtifactStagingDirectory)/publish'
-  packageZip: '$(Build.ArtifactStagingDirectory)/WebApp.zip'
 
 stages:
 - stage: Build
@@ -21,34 +16,24 @@ stages:
       inputs:
         packageType: 'sdk'
         version: '9.0.x'
-        includePreviewVersions: true
 
     - task: DotNetCoreCLI@2
       displayName: 'Restore packages'
       inputs:
         command: 'restore'
-        projects: 'DiaryApp/DiaryApp.csproj'
+        projects: '**/*.csproj'
 
     - task: DotNetCoreCLI@2
       displayName: 'Publish project'
       inputs:
         command: 'publish'
-        projects: 'DiaryApp/DiaryApp.csproj'
-        arguments: '--configuration $(buildConfiguration) --output $(publishDir) --no-restore'
-        zipAfterPublish: false
-
-    - task: ArchiveFiles@2
-      displayName: 'Zip publish output'
-      inputs:
-        rootFolderOrFile: '$(publishDir)'
-        includeRootFolder: false
-        archiveFile: '$(packageZip)'
-        replaceExistingArchive: true
+        publishWebProjects: true
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
 
     - task: PublishBuildArtifacts@1
       inputs:
-        PathtoPublish: '$(packageZip)'
-        ArtifactName: '$(artifactName)'
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'WebApp'
         publishLocation: 'Container'
 
 - stage: Deploy
@@ -60,16 +45,15 @@ stages:
       inputs:
         buildType: 'current'
         downloadType: 'single'
-        artifactName: '$(artifactName)'
+        artifactName: 'WebApp'
         downloadPath: '$(Pipeline.Workspace)'
 
     - task: AzureWebApp@1
-      displayName: 'Deploy to Azure App Service (prod-DiaryApp)'
+      displayName: 'Deploy to Azure App Service'
       inputs:
-        azureSubscription: '$(azureServiceConnection)'
-        appType: 'webApp'
-        appName: '$(webAppName)'
-        package: '$(Pipeline.Workspace)/$(artifactName)/WebApp.zip'
+        azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'   # nombre del Service Connection en DevOps
+        appName: 'dev-DiaryApp'              # nombre exacto del App Service en Azure Portal
+        package: '$(Pipeline.Workspace)/WebApp'
         deploymentMethod: 'zipDeploy'
         takeAppOfflineFlag: true
         removeAdditionalFilesFlag: true
