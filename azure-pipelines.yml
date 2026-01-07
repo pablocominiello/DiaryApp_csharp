@@ -15,7 +15,7 @@ variables:
   buildConfiguration: 'Release'
 
 stages:
-  - stage: Restore
+  - stage: DiaryApp_deploy
     jobs:
     - job: Restore  
       steps:
