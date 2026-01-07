@@ -5,8 +5,6 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
 stages:
@@ -14,24 +12,23 @@ stages:
   jobs:
   - job: build
     steps:
-    - task: NuGetToolInstaller@1
-
-    - task: NuGetCommand@2
+    - task: UseDotNet@2
       inputs:
-        restoreSolution: '$(solution)'
+        packageType: 'sdk'
+        version: '9.0.x'
 
-    - task: VSBuild@1
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore packages'
       inputs:
-        solution: '$(solution)'
-        msbuildArgs: >
-          /p:DeployOnBuild=true
-          /p:WebPublishMethod=Package
-          /p:PackageAsSingleFile=true
-          /p:SkipInvalidConfigurations=true
-          /p:DesktopBuildPackageLocation="$(Build.ArtifactStagingDirectory)\WebApp.zip"
-          /p:DeployIisAppPath="DiaryApp"
-        platform: '$(buildPlatform)'
-        configuration: '$(buildConfiguration)'
+        command: 'restore'
+        projects: '**/*.csproj'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish project'
+      inputs:
+        command: 'publish'
+        publishWebProjects: true
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
 
     - task: PublishBuildArtifacts@1
       inputs:
@@ -52,9 +49,8 @@ stages:
         downloadPath: '$(Pipeline.Workspace)'
 
     - task: AzureWebApp@1
+      displayName: 'Deploy to Azure App Service'
       inputs:
-        azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)' # tu Service Connection
-        appName: 'dev-DiaryApp' # nombre exacto del App Service
-        package: '$(Pipeline.Workspace)/WebApp/WebApp.zip'
-
-        
+        azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'   # nombre del Service Connection en DevOps
+        appName: 'dev-DiaryApp'              # nombre exacto del App Service en Azure Portal
+        package: '$(Pipeline.Workspace)/WebApp'
