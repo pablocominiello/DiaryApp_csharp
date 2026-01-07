@@ -58,6 +58,7 @@ stages:
     - job: PublishArtifacts
       dependsOn: publish
       steps:
+      - script: dir
       - task: PublishBuildArtifacts@1
         inputs:
           PathtoPublish: '$(Build.ArtifactStagingDirectory)'
