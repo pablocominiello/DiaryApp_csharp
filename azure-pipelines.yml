@@ -53,10 +53,11 @@ stages:
       dependsOn: test
       steps:
       - task: DotNetCoreCLI@2
-        inputs:
-          azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
+        inputs:          
           command: 'publish'
           publishWebProjects: true
+          arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+
     - job: PublishArtifacts
       dependsOn: publish
       steps:
@@ -64,5 +65,5 @@ stages:
       - task: PublishBuildArtifacts@1
         inputs:
           PathtoPublish: '$(Build.ArtifactStagingDirectory)'       
-          ArtifactName: 'DiaryApp.dll'
+          ArtifactName: 'DiaryApp'
           publishLocation: 'Container'
