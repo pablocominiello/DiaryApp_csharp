@@ -8,45 +8,47 @@ variables:
   buildConfiguration: 'Release'
   publishDir: '$(Build.ArtifactStagingDirectory)/publish'
   packageZip: '$(Build.ArtifactStagingDirectory)/WebApp.zip'
+  webAppName: 'prod-DiaryApp'            # <-- define aquí
+  azureServiceConnection: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)' # move service connection here
 
 steps:
-- task: UseDotNet@2
-  inputs:
-    packageType: 'sdk'
-    version: '9.0.x'
-    includePreviewVersions: true
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'sdk'
+      version: '9.0.x'
+      includePreviewVersions: true
 
-- task: DotNetCoreCLI@2
-  displayName: 'Restore packages'
-  inputs:
-    command: 'restore'
-    projects: 'DiaryApp/DiaryApp.csproj'
+  - task: DotNetCoreCLI@2
+    displayName: 'Restore packages'
+    inputs:
+      command: 'restore'
+      projects: 'DiaryApp/DiaryApp.csproj'
 
-- task: DotNetCoreCLI@2
-  displayName: 'Publish project'
-  inputs:
-    command: 'publish'
-    projects: 'DiaryApp/DiaryApp.csproj'
-    arguments: '--configuration $(buildConfiguration) --output $(publishDir)'
-    zipAfterPublish: false
+  - task: DotNetCoreCLI@2
+    displayName: 'Publish project'
+    inputs:
+      command: 'publish'
+      projects: 'DiaryApp/DiaryApp.csproj'
+      arguments: '--configuration $(buildConfiguration) --output $(publishDir)'
+      zipAfterPublish: false
 
-- powershell: |
-    Write-Host "Publish dir contents:"
-    Get-ChildItem -Path "$(publishDir)" -Recurse | Select-Object FullName
-  displayName: 'Inspect publish output'
+  - powershell: |
+      Write-Host "Publish dir contents:"
+      Get-ChildItem -Path "$(publishDir)" -Recurse | Select-Object FullName
+    displayName: 'Inspect publish output'
 
-- task: ArchiveFiles@2
-  displayName: 'Zip publish output (contents at root)'
-  inputs:
-    rootFolderOrFile: '$(publishDir)'
-    includeRootFolder: false
-    archiveFile: '$(packageZip)'
-    replaceExistingArchive: true
+  - task: ArchiveFiles@2
+    displayName: 'Zip publish output (contents at root)'
+    inputs:
+      rootFolderOrFile: '$(publishDir)'
+      includeRootFolder: false
+      archiveFile: '$(packageZip)'
+      replaceExistingArchive: true
 
-- task: AzureWebApp@1
-  displayName: 'Deploy to Azure Web App'
-  inputs:
-    azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
-    appName: 'dev-DiaryApp'
-    package: '$(packageZip)'
-    deploymentMethod: 'zipDeploy'
+  - task: AzureWebApp@1
+    displayName: 'Deploy to Azure Web App'
+    inputs:
+      azureSubscription: '$(azureServiceConnection)'
+      appName: '$(webAppName)'           # <-- use the variable here
+      package: '$(packageZip)'
+      deploymentMethod: 'zipDeploy'
