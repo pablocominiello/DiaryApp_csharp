@@ -17,11 +17,17 @@ steps:
     includePreviewVersions: true
 
 - task: DotNetCoreCLI@2
+  displayName: 'Restore packages'
+  inputs:
+    command: 'restore'
+    projects: 'DiaryApp/DiaryApp.csproj'
+
+- task: DotNetCoreCLI@2
   displayName: 'Publish project'
   inputs:
     command: 'publish'
     projects: 'DiaryApp/DiaryApp.csproj'
-    arguments: '--configuration $(buildConfiguration) --output $(publishDir) --no-restore'
+    arguments: '--configuration $(buildConfiguration) --output $(publishDir)'
     zipAfterPublish: false
 
 - powershell: |
