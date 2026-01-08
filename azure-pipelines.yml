@@ -40,8 +40,7 @@ steps:
 - task: AzureWebApp@1
   displayName: 'Deploy to Azure Web App'
   inputs:
-    azureSubscription: '$(azureServiceConnection)'
-    appType: 'webApp'
+    azureSubscription: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
     appName: 'dev-DiaryApp'
     package: '$(packageZip)'
     deploymentMethod: 'zipDeploy'
