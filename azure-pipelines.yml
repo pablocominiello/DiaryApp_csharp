@@ -6,69 +6,42 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  azureServiceConnection: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)' # replace with your service connection name
-  webAppName: 'prod-DiaryApp'
-  artifactName: 'DiaryApp'
   publishDir: '$(Build.ArtifactStagingDirectory)/publish'
-  packageZip: '$(Build.ArtifactStagingDirectory)/DiaryApp.zip'
+  packageZip: '$(Build.ArtifactStagingDirectory)/WebApp.zip'
 
-stages:
-- stage: Build
-  jobs:
-  - job: build
-    steps:
-    - task: UseDotNet@2
-      inputs:
-        packageType: 'sdk'
-        version: '9.0.x'
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '9.0.x'
+    includePreviewVersions: true
 
-    - task: DotNetCoreCLI@2
-      displayName: 'Restore packages'
-      inputs:
-        command: 'restore'
-        projects: 'DiaryApp/DiaryApp.csproj'
+- task: DotNetCoreCLI@2
+  displayName: 'Publish project'
+  inputs:
+    command: 'publish'
+    projects: 'DiaryApp/DiaryApp.csproj'
+    arguments: '--configuration $(buildConfiguration) --output $(publishDir) --no-restore'
+    zipAfterPublish: false
 
-    - task: DotNetCoreCLI@2
-      displayName: 'Publish project'
-      inputs:
-        command: 'publish'
-        projects: 'DiaryApp/DiaryApp.csproj'
-        arguments: '--configuration $(buildConfiguration) --output $(publishDir) --no-restore'
-        zipAfterPublish: false
+- powershell: |
+    Write-Host "Publish dir contents:"
+    Get-ChildItem -Path "$(publishDir)" -Recurse | Select-Object FullName
+  displayName: 'Inspect publish output'
 
-    - task: ArchiveFiles@2
-      displayName: 'Zip publish output'
-      inputs:
-        rootFolderOrFile: '$(publishDir)'
-        includeRootFolder: false
-        archiveFile: '$(packageZip)'
-        replaceExistingArchive: true
+- task: ArchiveFiles@2
+  displayName: 'Zip publish output (contents at root)'
+  inputs:
+    rootFolderOrFile: '$(publishDir)'
+    includeRootFolder: false
+    archiveFile: '$(packageZip)'
+    replaceExistingArchive: true
 
-    - task: PublishBuildArtifacts@1
-      inputs:
-        PathtoPublish: '$(packageZip)'
-        ArtifactName: '$(artifactName)'
-        publishLocation: 'Container'
-
-- stage: Deploy
-  dependsOn: Build
-  jobs:
-  - job: deploy
-    steps:
-    - task: DownloadBuildArtifacts@0
-      inputs:
-        buildType: 'current'
-        downloadType: 'single'
-        artifactName: '$(artifactName)'
-        downloadPath: '$(Pipeline.Workspace)'
-
-    - task: AzureWebApp@1
-      displayName: 'Deploy to Azure App Service (prod-DiaryApp)'
-      inputs:
-        azureSubscription: '$(azureServiceConnection)'
-        appType: 'webApp'
-        appName: '$(webAppName)'
-        package: '$(Pipeline.Workspace)/$(artifactName)/DiaryApp.zip'
-        deploymentMethod: 'zipDeploy'
-        takeAppOfflineFlag: true
-        removeAdditionalFilesFlag: true
+- task: AzureWebApp@1
+  displayName: 'Deploy to Azure Web App'
+  inputs:
+    azureSubscription: '$(azureServiceConnection)'
+    appType: 'webApp'
+    appName: 'dev-DiaryApp'
+    package: '$(packageZip)'
+    deploymentMethod: 'zipDeploy'
