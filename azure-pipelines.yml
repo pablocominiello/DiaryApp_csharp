@@ -18,11 +18,14 @@ steps:
       version: '9.0.x'
       includePreviewVersions: true
 
-  - task: DotNetCoreCLI@2
-    displayName: 'Restore packages'
+  - task: NuGetToolInstaller@1
+    inputs:
+      versionSpec: '6.x'   # instala NuGet CLI moderno en el agente
+
+  - task: NuGetCommand@2
     inputs:
       command: 'restore'
-      projects: 'DiaryApp/DiaryApp.csproj'
+      restoreSolution: 'DiaryApp.sln'
 
   - task: DotNetCoreCLI@2
     displayName: 'Publish project'
