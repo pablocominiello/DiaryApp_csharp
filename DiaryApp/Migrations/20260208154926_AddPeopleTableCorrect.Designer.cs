@@ -4,6 +4,7 @@ using DiaryApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DiaryApp.Migrations
 {
     [DbContext(typeof(AplicationDbContext))]
-    partial class AplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260208154926_AddPeopleTableCorrect")]
+    partial class AddPeopleTableCorrect
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,21 +54,21 @@ namespace DiaryApp.Migrations
                         {
                             Id = 1,
                             Content = "learning .net mvc with Punjha",
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Title = "Learning .Net MVC"
                         },
                         new
                         {
                             Id = 2,
                             Content = "Learning Migrations mvc with Punjha",
-                            DateCreated = new DateTime(2025, 1, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Title = "Learning Migrations"
                         },
                         new
                         {
                             Id = 3,
                             Content = "Learning Input database with Punjha",
-                            DateCreated = new DateTime(2025, 1, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Title = "Input database"
                         });
                 });
@@ -86,25 +89,13 @@ namespace DiaryApp.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
-                    b.Property<string>("ImagenUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Peoples");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Born = new DateTime(1976, 6, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Content = "Kili",
-                            Nombre = "Pablo Eugenio Cominiello"
-                        });
+                    b.ToTable("People");
                 });
 #pragma warning restore 612, 618
         }
