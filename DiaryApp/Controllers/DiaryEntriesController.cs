@@ -144,9 +144,9 @@ namespace DiaryApp.Controllers
         // GET: PersonsController1 
         public ActionResult Index()
         {
-            List<Models.Person> objDiaryEntryList = _db.Peoples.ToList(); 
+            List<Models.Person> objPersonList = _db.Peoples.ToList(); 
 
-            return View(objDiaryEntryList);
+            return View(objPersonList);
         }
 
         // GET: PeoplesController1/Details/5
@@ -214,30 +214,64 @@ namespace DiaryApp.Controllers
                 return NotFound();
             }
 
-            Models.DiaryEntry diaryEntry = _db.DiaryEntries.Find(id);
+            Models.Person person = _db.Peoples.Find(id);
 
-            if (diaryEntry == null)
+            if (person == null)
             {
                 return NotFound();
             }
-            return View(diaryEntry);
+            return View(person);
         }
 
         // POST: DiaryEntriesController1/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(DiaryApp.Models.DiaryEntry obj)
+        public async Task<ActionResult> Edit(DiaryApp.Models.Person obj, IFormFile? imagenFile)
         {
             // Server-side validation example
-            if (obj != null && obj.Title.Length < 3)
+            if (obj != null && obj.Nombre.Length < 3)
             {
-                ModelState.AddModelError("Title", "Titulo muy corto");
+                ModelState.AddModelError("Nombre", "Nombre muy corto");
             }
 
             if (ModelState.IsValid)
             {
-                _db.DiaryEntries.Update(obj); // Update entry to database
-                _db.SaveChanges(); // save changes to database
+                // Procesar la nueva imagen si fue subida
+                if (imagenFile != null && imagenFile.Length > 0)
+                {
+                    // Eliminar la imagen anterior si existe
+                    if (!string.IsNullOrEmpty(obj.ImagenUrl))
+                    {
+                        var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", obj.ImagenUrl.TrimStart('/'));
+                        if (System.IO.File.Exists(oldImagePath))
+                        {
+                            System.IO.File.Delete(oldImagePath);
+                        }
+                    }
+
+                    // Crear carpeta wwwroot/images/persons si no existe
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "persons");
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    // Generar nombre único para la imagen
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + imagenFile.FileName;
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    // Guardar la imagen
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await imagenFile.CopyToAsync(fileStream);
+                    }
+
+                    // Guardar la ruta relativa en la base de datos
+                    obj.ImagenUrl = "/images/persons/" + uniqueFileName;
+                }
+
+                _db.Peoples.Update(obj); // Update entry to database
+                await _db.SaveChangesAsync(); // save changes to database
                 return RedirectToAction("index");
             }
 
@@ -254,29 +288,29 @@ namespace DiaryApp.Controllers
                 return NotFound();
             }
 
-            Models.DiaryEntry diaryEntry = _db.DiaryEntries.Find(id);
+            Models.Person objperson = _db.Peoples.Find(id);
 
-            if (diaryEntry == null)
+            if (objperson == null)
             {
                 return NotFound();
             }
-            return View(diaryEntry);
+            return View(objperson);
         }
 
         // POST: DiaryEntriesController1/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(DiaryApp.Models.DiaryEntry obj)
+        public ActionResult Delete(DiaryApp.Models.Person obj)
         {
             // Server-side validation example
-            if (obj != null && obj.Title.Length < 3)
+            if (obj != null && obj.Nombre.Length < 3)
             {
                 ModelState.AddModelError("Title", "Titulo muy corto");
             }
 
             if (ModelState.IsValid)
             {
-                _db.DiaryEntries.Remove(obj); // Update entry to database
+                _db.Peoples.Remove(obj); // Update entry to database
                 _db.SaveChanges(); // save changes to database
                 return RedirectToAction("index");
             }

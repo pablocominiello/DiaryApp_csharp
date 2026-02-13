@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DiaryApp.Models
 {
@@ -35,5 +36,38 @@ namespace DiaryApp.Models
 
         // Nueva propiedad para almacenar la ruta de la imagen
         public string? ImagenUrl { get; set; }
+
+        // Relación uno a muchos con Payments
+        public ICollection<Payment>? Payments { get; set; }
+    }
+
+    public class Payment
+    {
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "Seleccione una persona")]
+        [Display(Name = "Persona")]
+        public int PeoplesId { get; set; }
+
+        [Required(ErrorMessage = "Ingrese el año")]
+        [Range(2000, 2100, ErrorMessage = "Ingrese un año válido entre 2000 y 2100")]
+        [Display(Name = "Año")]
+        public int Ano { get; set; }
+
+        [Required(ErrorMessage = "Ingrese el día")]
+        [Range(1, 31, ErrorMessage = "Ingrese un día válido entre 1 y 31")]
+        [Display(Name = "Día")]
+        public int Dia { get; set; }
+
+        [Required(ErrorMessage = "Ingrese la fecha")]
+        [Display(Name = "Fecha")]
+        public DateTime Fecha { get; set; }
+
+        [Display(Name = "Comprobante")]
+        public string? ComprobanteUrl { get; set; }
+
+        // Propiedad de navegación
+        [ForeignKey("PeoplesId")]
+        public Person? Person { get; set; }
     }
 }

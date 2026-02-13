@@ -9,6 +9,7 @@ namespace DiaryApp.Data
         }
         public DbSet<DiaryApp.Models.DiaryEntry> DiaryEntries { get; set; }
         public DbSet<DiaryApp.Models.Person> Peoples { get; set; }
+        public DbSet<DiaryApp.Models.Payment> Payments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,6 +50,13 @@ namespace DiaryApp.Data
                         Born = new DateTime(1976, 6, 30)
                     }
                 );
+
+            // Configurar relación entre Payment y Person
+            modelBuilder.Entity<Models.Payment>()
+                .HasOne(p => p.Person)
+                .WithMany(pe => pe.Payments)
+                .HasForeignKey(p => p.PeoplesId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
