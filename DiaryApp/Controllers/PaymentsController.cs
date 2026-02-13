@@ -15,10 +15,28 @@ namespace DiaryApp.Controllers
         }
 
         // GET: Payments
-        public ActionResult Index()
+        public ActionResult Index(int? personId)
         {
-            List<Models.Payment> paymentList = _db.Payments
+            var paymentsQuery = _db.Payments
                 .Include(p => p.Person)
+                .AsQueryable();
+
+            // Filtrar por persona si se proporciona el parámetro
+            if (personId.HasValue && personId.Value > 0)
+            {
+                paymentsQuery = paymentsQuery.Where(p => p.PeoplesId == personId.Value);
+                
+                // Obtener el nombre y la imagen de la persona para mostrarlos
+                var person = _db.Peoples.Find(personId.Value);
+                if (person != null)
+                {
+                    ViewBag.PersonName = person.Nombre;
+                    ViewBag.PersonImageUrl = person.ImagenUrl;
+                    ViewBag.PersonId = personId.Value;
+                }
+            }
+
+            List<Models.Payment> paymentList = paymentsQuery
                 .OrderByDescending(p => p.Fecha)
                 .ToList();
 

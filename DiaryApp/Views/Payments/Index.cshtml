@@ -3,12 +3,47 @@
 <div class="container">
     <div class="row pt-4">
         <div class="col-6">
-            <a asp-controller="Payments" asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Agregar Pago
-            </a>
+            @if (ViewBag.PersonId != null)
+            {
+                <a asp-controller="Payments" asp-action="Create" asp-route-personId="@ViewBag.PersonId" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                    </svg>
+                    Agregar Pago
+                </a>
+                <a asp-controller="Persons" asp-action="Index" class="btn btn-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+                    </svg>
+                    Volver a Personas
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Payments" asp-action="Create" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                    </svg>
+                    Agregar Pago
+                </a>
+            }
         </div>
         <div class="col-6 text-end">
-            <h2>Pagos</h2>
+            <h2>
+                Pagos
+                @if (!string.IsNullOrEmpty(ViewBag.PersonName))
+                {
+                    <span class="d-inline-flex align-items-center">
+                        @if (!string.IsNullOrEmpty(ViewBag.PersonImageUrl))
+                        {
+                            <img src="@ViewBag.PersonImageUrl" alt="@ViewBag.PersonName" style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px; margin-left: 10px; margin-right: 5px;" />
+                        }
+                        <small class="text-muted">@ViewBag.PersonName</small>
+                    </span>
+                }
+            </h2>
         </div>
     </div>
 </div>
