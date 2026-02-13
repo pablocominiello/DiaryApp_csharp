@@ -54,7 +54,7 @@
             <tr class="table-secondary">
                 <th>Persona</th>
                 <th>Año</th>
-                <th>Día</th>
+                <th>Mes</th>
                 <th>Fecha</th>
                 <th>Comprobante</th>
                 <th>Acciones</th>
@@ -66,7 +66,7 @@
                 <tr>
                     <td>@payment.Person?.Nombre</td>
                     <td>@payment.Ano</td>
-                    <td>@payment.Dia</td>
+                    <td>@payment.Mes</td>
                     <td>@payment.Fecha.ToString("dd/MM/yyyy")</td>
                     <td>
                         @if (!string.IsNullOrEmpty(payment.ComprobanteUrl))

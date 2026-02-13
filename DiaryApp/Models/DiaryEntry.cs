@@ -54,10 +54,10 @@ namespace DiaryApp.Models
         [Display(Name = "Año")]
         public int Ano { get; set; }
 
-        [Required(ErrorMessage = "Ingrese el día")]
-        [Range(1, 31, ErrorMessage = "Ingrese un día válido entre 1 y 31")]
-        [Display(Name = "Día")]
-        public int Dia { get; set; }
+        [Required(ErrorMessage = "Ingrese el mes")]
+        [Range(1, 12, ErrorMessage = "Ingrese un mes válido entre 1 y 12")]
+        [Display(Name = "Mes")]
+        public int Mes { get; set; }
 
         [Required(ErrorMessage = "Ingrese la fecha")]
         [Display(Name = "Fecha")]

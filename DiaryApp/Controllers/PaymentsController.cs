@@ -44,9 +44,20 @@ namespace DiaryApp.Controllers
         }
 
         // GET: Payments/Create
-        public ActionResult Create()
+        public ActionResult Create(int? personId)
         {
             ViewBag.Peoples = new SelectList(_db.Peoples, "Id", "Nombre");
+            
+            // Si se recibe un personId, crear un modelo con ese valor preseleccionado
+            if (personId.HasValue && personId.Value > 0)
+            {
+                var payment = new Models.Payment
+                {
+                    PeoplesId = personId.Value
+                };
+                return View(payment);
+            }
+            
             return View();
         }
 
