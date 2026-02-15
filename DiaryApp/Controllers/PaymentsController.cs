@@ -75,6 +75,15 @@ namespace DiaryApp.Controllers
                 ModelState.AddModelError("PeoplesId", "Debe seleccionar una persona");
             }
 
+            // Validar que no exista un pago duplicado
+            var existingPayment = _db.Payments
+                .FirstOrDefault(p => p.PeoplesId == obj.PeoplesId && p.Ano == obj.Ano && p.Mes == obj.Mes);
+    
+            if (existingPayment != null)
+            {
+                ModelState.AddModelError("", $"Ya existe un pago registrado para esta persona en {obj.Mes}/{obj.Ano}");
+            }
+
             if (ModelState.IsValid)
             {
                 // Procesar el comprobante si fue subido
@@ -99,10 +108,11 @@ namespace DiaryApp.Controllers
 
                 _db.Payments.Add(obj);
                 await _db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                return RedirectToAction("Index", new { personId = obj.PeoplesId });
             }
 
             ViewBag.Peoples = new SelectList(_db.Peoples, "Id", "Nombre", obj.PeoplesId);
+            ViewBag.PersonId = obj.PeoplesId;
             return View(obj);
         }
 

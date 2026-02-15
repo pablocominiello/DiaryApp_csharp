@@ -57,6 +57,12 @@ namespace DiaryApp.Data
                 .WithMany(pe => pe.Payments)
                 .HasForeignKey(p => p.PeoplesId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Agregar índice único compuesto para evitar duplicados
+            modelBuilder.Entity<Models.Payment>()
+                .HasIndex(p => new { p.PeoplesId, p.Ano, p.Mes })
+                .IsUnique()
+                .HasDatabaseName("IX_Payments_PeoplesId_Ano_Mes");
         }
     }
 }
