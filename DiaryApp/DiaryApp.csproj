@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <PreserveCompilationContext>true</PreserveCompilationContext>
     <MvcRazorCompileOnPublish>true</MvcRazorCompileOnPublish>
+    <UserSecretsId>b9bb1501-fef4-4ec1-9dba-9cbbc0aaafda</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
