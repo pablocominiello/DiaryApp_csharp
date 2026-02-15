@@ -31,7 +31,7 @@
 
                 <div class="card-group">
                     <label asp-for="Fecha" class="form-label"></label>
-                    <input asp-for="Fecha" class="form-control" type="date" />
+                    <input asp-for="Fecha" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="Fecha" class="text-bg-danger"></span>
                 </div>
 

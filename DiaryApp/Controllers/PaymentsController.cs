@@ -48,17 +48,20 @@ namespace DiaryApp.Controllers
         {
             ViewBag.Peoples = new SelectList(_db.Peoples, "Id", "Nombre");
             
-            // Si se recibe un personId, crear un modelo con ese valor preseleccionado
+            // Crear un modelo con valores por defecto
+            var payment = new Models.Payment
+            {
+                Ano = 2026,
+                Fecha = DateTime.Now
+            };
+            
+            // Si se recibe un personId, preseleccionar la persona
             if (personId.HasValue && personId.Value > 0)
             {
-                var payment = new Models.Payment
-                {
-                    PeoplesId = personId.Value
-                };
-                return View(payment);
+                payment.PeoplesId = personId.Value;
             }
             
-            return View();
+            return View(payment);
         }
 
         // POST: Payments/Create
@@ -120,6 +123,7 @@ namespace DiaryApp.Controllers
             }
 
             ViewBag.Peoples = new SelectList(_db.Peoples, "Id", "Nombre", payment.PeoplesId);
+            ViewBag.PersonId = payment.PeoplesId;
             return View(payment);
         }
 
@@ -165,10 +169,11 @@ namespace DiaryApp.Controllers
 
                 _db.Payments.Update(obj);
                 await _db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                return RedirectToAction("Index", new { personId = obj.PeoplesId });
             }
 
             ViewBag.Peoples = new SelectList(_db.Peoples, "Id", "Nombre", obj.PeoplesId);
+            ViewBag.PersonId = obj.PeoplesId;
             return View(obj);
         }
 
