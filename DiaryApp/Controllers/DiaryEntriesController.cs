@@ -1,4 +1,5 @@
 ﻿using DiaryApp.Data;
+using DiaryApp.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -132,13 +133,16 @@ namespace DiaryApp.Controllers
             return View(obj);
         }
     }
+    
     public class PersonsController : Controller
     {
         private readonly AplicationDbContext _db;
+        private readonly IBlobStorageService _blobStorageService;
 
-        public PersonsController(AplicationDbContext db)
+        public PersonsController(AplicationDbContext db, IBlobStorageService blobStorageService)
         {
             _db = db;
+            _blobStorageService = blobStorageService;
         }
 
         // GET: PersonsController1 
@@ -172,28 +176,18 @@ namespace DiaryApp.Controllers
 
             if (ModelState.IsValid) 
             {
-                // Procesar la imagen si fue subida
+                // Subir imagen a Azure Blob Storage
                 if (imagenFile != null && imagenFile.Length > 0)
                 {
-                    // Crear carpeta wwwroot/images/persons si no existe
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "persons");
-                    if (!Directory.Exists(uploadsFolder))
+                    try
                     {
-                        Directory.CreateDirectory(uploadsFolder);
+                        obj.ImagenUrl = await _blobStorageService.UploadImageAsync(imagenFile, "persons");
                     }
-
-                    // Generar nombre único para la imagen
-                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + imagenFile.FileName;
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    // Guardar la imagen
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    catch (Exception ex)
                     {
-                        await imagenFile.CopyToAsync(fileStream);
+                        ModelState.AddModelError("", $"Error al subir la imagen: {ex.Message}");
+                        return View(obj);
                     }
-
-                    // Guardar la ruta relativa en la base de datos
-                    obj.ImagenUrl = "/images/persons/" + uniqueFileName;
                 }
 
                 _db.Peoples.Add(obj); // add new entry to database
@@ -239,35 +233,22 @@ namespace DiaryApp.Controllers
                 // Procesar la nueva imagen si fue subida
                 if (imagenFile != null && imagenFile.Length > 0)
                 {
-                    // Eliminar la imagen anterior si existe
-                    if (!string.IsNullOrEmpty(obj.ImagenUrl))
+                    try
                     {
-                        var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", obj.ImagenUrl.TrimStart('/'));
-                        if (System.IO.File.Exists(oldImagePath))
+                        // Eliminar la imagen anterior de Azure Blob Storage
+                        if (!string.IsNullOrEmpty(obj.ImagenUrl))
                         {
-                            System.IO.File.Delete(oldImagePath);
+                            await _blobStorageService.DeleteImageAsync(obj.ImagenUrl, "persons");
                         }
-                    }
 
-                    // Crear carpeta wwwroot/images/persons si no existe
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "persons");
-                    if (!Directory.Exists(uploadsFolder))
+                        // Subir nueva imagen a Azure Blob Storage
+                        obj.ImagenUrl = await _blobStorageService.UploadImageAsync(imagenFile, "persons");
+                    }
+                    catch (Exception ex)
                     {
-                        Directory.CreateDirectory(uploadsFolder);
+                        ModelState.AddModelError("", $"Error al actualizar la imagen: {ex.Message}");
+                        return View(obj);
                     }
-
-                    // Generar nombre único para la imagen
-                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + imagenFile.FileName;
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    // Guardar la imagen
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await imagenFile.CopyToAsync(fileStream);
-                    }
-
-                    // Guardar la ruta relativa en la base de datos
-                    obj.ImagenUrl = "/images/persons/" + uniqueFileName;
                 }
 
                 _db.Peoples.Update(obj); // Update entry to database
@@ -300,7 +281,7 @@ namespace DiaryApp.Controllers
         // POST: DiaryEntriesController1/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(DiaryApp.Models.Person obj)
+        public async Task<ActionResult> Delete(DiaryApp.Models.Person obj)
         {
             // Server-side validation example
             if (obj != null && obj.Nombre.Length < 3)
@@ -310,8 +291,21 @@ namespace DiaryApp.Controllers
 
             if (ModelState.IsValid)
             {
+                // Eliminar imagen de Azure Blob Storage antes de eliminar la persona
+                if (!string.IsNullOrEmpty(obj.ImagenUrl))
+                {
+                    try
+                    {
+                        await _blobStorageService.DeleteImageAsync(obj.ImagenUrl, "persons");
+                    }
+                    catch
+                    {
+                        // Continuar con la eliminación aunque falle eliminar la imagen
+                    }
+                }
+
                 _db.Peoples.Remove(obj); // Update entry to database
-                _db.SaveChanges(); // save changes to database
+                await _db.SaveChangesAsync(); // save changes to database
                 return RedirectToAction("index");
             }
 

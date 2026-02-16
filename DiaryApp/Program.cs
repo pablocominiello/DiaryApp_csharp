@@ -1,4 +1,5 @@
 using DiaryApp.Data;
+using DiaryApp.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<AplicationDbContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("defaultConnection")));
+
+// Registrar el servicio de Azure Blob Storage
+builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 
 var app = builder.Build();
 

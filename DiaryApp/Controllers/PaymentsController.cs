@@ -1,4 +1,5 @@
 using DiaryApp.Data;
+using DiaryApp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -8,10 +9,12 @@ namespace DiaryApp.Controllers
     public class PaymentsController : Controller
     {
         private readonly AplicationDbContext _db;
+        private readonly IBlobStorageService _blobStorageService;
 
-        public PaymentsController(AplicationDbContext db)
+        public PaymentsController(AplicationDbContext db, IBlobStorageService blobStorageService)
         {
             _db = db;
+            _blobStorageService = blobStorageService;
         }
 
         // GET: Payments
@@ -86,24 +89,20 @@ namespace DiaryApp.Controllers
 
             if (ModelState.IsValid)
             {
-                // Procesar el comprobante si fue subido
+                // Subir comprobante a Azure Blob Storage
                 if (comprobanteFile != null && comprobanteFile.Length > 0)
                 {
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "comprobantes");
-                    if (!Directory.Exists(uploadsFolder))
+                    try
                     {
-                        Directory.CreateDirectory(uploadsFolder);
+                        obj.ComprobanteUrl = await _blobStorageService.UploadImageAsync(comprobanteFile, "comprobantes");
                     }
-
-                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + comprobanteFile.FileName;
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    catch (Exception ex)
                     {
-                        await comprobanteFile.CopyToAsync(fileStream);
+                        ModelState.AddModelError("", $"Error al subir el comprobante: {ex.Message}");
+                        ViewBag.Peoples = new SelectList(_db.Peoples, "Id", "Nombre", obj.PeoplesId);
+                        ViewBag.PersonId = obj.PeoplesId;
+                        return View(obj);
                     }
-
-                    obj.ComprobanteUrl = "/images/comprobantes/" + uniqueFileName;
                 }
 
                 _db.Payments.Add(obj);
@@ -149,32 +148,27 @@ namespace DiaryApp.Controllers
 
             if (ModelState.IsValid)
             {
+                // Subir nuevo comprobante a Azure Blob Storage
                 if (comprobanteFile != null && comprobanteFile.Length > 0)
                 {
-                    if (!string.IsNullOrEmpty(obj.ComprobanteUrl))
+                    try
                     {
-                        var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", obj.ComprobanteUrl.TrimStart('/'));
-                        if (System.IO.File.Exists(oldImagePath))
+                        // Eliminar comprobante anterior de Azure Blob Storage
+                        if (!string.IsNullOrEmpty(obj.ComprobanteUrl))
                         {
-                            System.IO.File.Delete(oldImagePath);
+                            await _blobStorageService.DeleteImageAsync(obj.ComprobanteUrl, "comprobantes");
                         }
-                    }
 
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "comprobantes");
-                    if (!Directory.Exists(uploadsFolder))
+                        // Subir nuevo comprobante
+                        obj.ComprobanteUrl = await _blobStorageService.UploadImageAsync(comprobanteFile, "comprobantes");
+                    }
+                    catch (Exception ex)
                     {
-                        Directory.CreateDirectory(uploadsFolder);
+                        ModelState.AddModelError("", $"Error al actualizar el comprobante: {ex.Message}");
+                        ViewBag.Peoples = new SelectList(_db.Peoples, "Id", "Nombre", obj.PeoplesId);
+                        ViewBag.PersonId = obj.PeoplesId;
+                        return View(obj);
                     }
-
-                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + comprobanteFile.FileName;
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await comprobanteFile.CopyToAsync(fileStream);
-                    }
-
-                    obj.ComprobanteUrl = "/images/comprobantes/" + uniqueFileName;
                 }
 
                 _db.Payments.Update(obj);
@@ -217,12 +211,16 @@ namespace DiaryApp.Controllers
                 return NotFound();
             }
 
+            // Eliminar comprobante de Azure Blob Storage
             if (!string.IsNullOrEmpty(payment.ComprobanteUrl))
             {
-                var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", payment.ComprobanteUrl.TrimStart('/'));
-                if (System.IO.File.Exists(imagePath))
+                try
                 {
-                    System.IO.File.Delete(imagePath);
+                    await _blobStorageService.DeleteImageAsync(payment.ComprobanteUrl, "comprobantes");
+                }
+                catch
+                {
+                    // Continuar con la eliminación aunque falle eliminar el comprobante
                 }
             }
 
