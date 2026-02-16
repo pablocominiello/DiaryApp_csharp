@@ -147,14 +147,27 @@ namespace DiaryApp.Controllers
         }
 
         // GET: PersonsController1 
-        public ActionResult Index(int? page)
+        public ActionResult Index(string searchString, int? page)
         {
             int pageSize = 5;
             int pageNumber = page ?? 1;
 
-            var objPersonList = _db.Peoples
+            // Obtener todas las personas
+            var peoplesQuery = _db.Peoples.AsQueryable();
+
+            // Aplicar filtro si se proporciona un término de búsqueda
+            if (!string.IsNullOrWhiteSpace(searchString))
+            {
+                peoplesQuery = peoplesQuery.Where(p => p.Nombre.Contains(searchString));
+            }
+
+            // Ordenar y paginar
+            var objPersonList = peoplesQuery
                 .OrderBy(p => p.Nombre)
                 .ToPagedList(pageNumber, pageSize);
+
+            // Pasar el término de búsqueda a la vista para mantenerlo en el formulario
+            ViewBag.SearchString = searchString;
 
             return View(objPersonList);
         }
