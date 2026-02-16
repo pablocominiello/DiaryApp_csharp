@@ -2,6 +2,7 @@
 using DiaryApp.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using X.PagedList.Extensions;
 
 namespace DiaryApp.Controllers
 {
@@ -146,9 +147,14 @@ namespace DiaryApp.Controllers
         }
 
         // GET: PersonsController1 
-        public ActionResult Index()
+        public ActionResult Index(int? page)
         {
-            List<Models.Person> objPersonList = _db.Peoples.ToList(); 
+            int pageSize = 5;
+            int pageNumber = page ?? 1;
+
+            var objPersonList = _db.Peoples
+                .OrderBy(p => p.Nombre)
+                .ToPagedList(pageNumber, pageSize);
 
             return View(objPersonList);
         }

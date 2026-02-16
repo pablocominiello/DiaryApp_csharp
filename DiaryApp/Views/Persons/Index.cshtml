@@ -1,9 +1,6 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
-@model List<DiaryApp.Models.Person>
+﻿@using X.PagedList
+@using X.PagedList.Mvc.Core
+@model IPagedList<DiaryApp.Models.Person>
 
 <div class="container">
     <div class="row pt-4">
@@ -86,4 +83,33 @@
             }
         </tbody>
     </table>
+</div>
+
+<!-- Paginación -->
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="Paginación de personas">
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page }), new PagedListRenderOptions
+                {
+                    LiElementClasses = new string[] { "page-item" },
+                    PageClasses = new string[] { "page-link" },
+                    UlElementClasses = new string[] { "pagination justify-content-center" },
+                    DisplayLinkToFirstPage = PagedListDisplayMode.Always,
+                    DisplayLinkToLastPage = PagedListDisplayMode.Always,
+                    DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                    DisplayLinkToNextPage = PagedListDisplayMode.Always,
+                    LinkToPreviousPageFormat = "Anterior",
+                    LinkToNextPageFormat = "Siguiente",
+                    LinkToFirstPageFormat = "Primera",
+                    LinkToLastPageFormat = "Última"
+                })
+            </nav>
+            <div class="text-center mt-2">
+                <small class="text-muted">
+                    Página @Model.PageNumber de @Model.PageCount - Mostrando @Model.Count de @Model.TotalItemCount personas
+                </small>
+            </div>
+        </div>
+    </div>
 </div>
