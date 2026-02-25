@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:DiaryApp.Mobile.ViewModels"
+             x:Class="DiaryApp.Mobile.Views.PaymentDetailPage"
+             x:DataType="viewmodels:PaymentDetailViewModel"
+             Title="{Binding Title}">
+
+    <ScrollView Padding="20">
+        <VerticalStackLayout Spacing="15">
+
+            <!-- A�o -->
+            <Label Text="A�o:" FontAttributes="Bold" />
+            <Entry Text="{Binding Ano}" Keyboard="Numeric" />
+
+            <!-- Mes -->
+            <Label Text="Mes:" FontAttributes="Bold" />
+            <Entry Text="{Binding Mes}" Keyboard="Numeric" />
+
+            <!-- Fecha -->
+            <Label Text="Fecha:" FontAttributes="Bold" />
+            <DatePicker Date="{Binding Fecha}" />
+
+            <!-- Save Button -->
+            <Button Text="Guardar"
+                    Command="{Binding SaveCommand}"
+                    BackgroundColor="#512BD4"
+                    TextColor="White"
+                    Margin="0,20,0,0" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

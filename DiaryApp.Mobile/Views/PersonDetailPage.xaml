@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:DiaryApp.Mobile.ViewModels"
+             x:Class="DiaryApp.Mobile.Views.PersonDetailPage"
+             x:DataType="viewmodels:PersonDetailViewModel"
+             Title="{Binding Title}">
+
+    <ScrollView Padding="20">
+        <VerticalStackLayout Spacing="15">
+
+            <!-- Image Picker -->
+            <Frame BorderColor="LightGray" Padding="0" HeightRequest="150">
+                <Grid>
+                    <Image Source="{Binding ImagenUrl}" 
+                           Aspect="AspectFill" />
+                    <Button Text="Seleccionar Imagen"
+                            Command="{Binding PickImageCommand}"
+                            VerticalOptions="End"
+                            Margin="10"
+                            Opacity="0.8" />
+                </Grid>
+            </Frame>
+
+            <!-- Nombre -->
+            <Label Text="Nombre:" FontAttributes="Bold" />
+            <Entry Text="{Binding Nombre}" Placeholder="Ingrese el nombre" />
+
+            <!-- Content -->
+            <Label Text="Observaciones:" FontAttributes="Bold" />
+            <Editor Text="{Binding Content}" 
+                    Placeholder="Ingrese observaciones"
+                    HeightRequest="100" />
+
+            <!-- Born Date -->
+            <Label Text="Fecha de Nacimiento:" FontAttributes="Bold" />
+            <DatePicker Date="{Binding Born}" />
+
+            <!-- Save Button -->
+            <Button Text="Guardar"
+                    Command="{Binding SaveCommand}"
+                    BackgroundColor="#512BD4"
+                    TextColor="White"
+                    Margin="0,20,0,0" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

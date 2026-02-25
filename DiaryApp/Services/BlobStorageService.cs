@@ -1,14 +1,9 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using DiaryApp.Core.Interfaces;
 
 namespace DiaryApp.Services
 {
-    public interface IBlobStorageService
-    {
-        Task<string> UploadImageAsync(IFormFile file, string containerName = "imagenes");
-        Task<bool> DeleteImageAsync(string blobUrl, string containerName = "imagenes");
-    }
-
     public class BlobStorageService : IBlobStorageService
     {
         private readonly BlobServiceClient _blobServiceClient;
@@ -19,24 +14,21 @@ namespace DiaryApp.Services
             _blobServiceClient = new BlobServiceClient(connectionString);
         }
 
-        public async Task<string> UploadImageAsync(IFormFile file, string containerName = "imagenes")
+        public async Task<string> UploadImageAsync(Stream imageStream, string fileName, string containerName = "imagenes")
         {
-            if (file == null || file.Length == 0)
-                throw new ArgumentException("File is empty");
+            if (imageStream == null || imageStream.Length == 0)
+                throw new ArgumentException("Stream is empty");
 
             var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
             await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
 
-            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-            var blobClient = containerClient.GetBlobClient(fileName);
+            var uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(fileName)}";
+            var blobClient = containerClient.GetBlobClient(uniqueFileName);
 
-            using (var stream = file.OpenReadStream())
+            await blobClient.UploadAsync(imageStream, new BlobHttpHeaders
             {
-                await blobClient.UploadAsync(stream, new BlobHttpHeaders 
-                { 
-                    ContentType = file.ContentType 
-                });
-            }
+                ContentType = GetContentType(fileName)
+            });
 
             return blobClient.Uri.ToString();
         }
@@ -50,16 +42,29 @@ namespace DiaryApp.Services
             {
                 var uri = new Uri(blobUrl);
                 var blobName = Path.GetFileName(uri.LocalPath);
-                
+
                 var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
                 var blobClient = containerClient.GetBlobClient(blobName);
-                
+
                 return await blobClient.DeleteIfExistsAsync();
             }
             catch
             {
                 return false;
             }
+        }
+
+        private static string GetContentType(string fileName)
+        {
+            var extension = Path.GetExtension(fileName).ToLowerInvariant();
+            return extension switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".bmp" => "image/bmp",
+                _ => "application/octet-stream"
+            };
         }
     }
 }

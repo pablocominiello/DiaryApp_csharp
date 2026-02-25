@@ -26,5 +26,9 @@
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DiaryApp.Core\DiaryApp.Core.csproj" />
+  </ItemGroup>
   
 </Project>

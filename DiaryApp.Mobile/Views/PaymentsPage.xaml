@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:DiaryApp.Mobile.ViewModels"
+             xmlns:models="clr-namespace:DiaryApp.Mobile.Models"
+             x:Class="DiaryApp.Mobile.Views.PaymentsPage"
+             x:DataType="viewmodels:PaymentsViewModel"
+             Title="{Binding Title}">
+
+    <Grid RowDefinitions="Auto,*" Padding="10">
+        <!-- Add Button -->
+        <Button Grid.Row="0"
+                Text="+ Nuevo Pago"
+                Command="{Binding AddPaymentCommand}"
+                Margin="0,0,0,10" />
+
+        <!-- Payments List -->
+        <CollectionView Grid.Row="1" 
+                        ItemsSource="{Binding Payments}"
+                        SelectionMode="None">
+            <CollectionView.EmptyView>
+                <StackLayout Padding="20" VerticalOptions="Center">
+                    <Label Text="No hay pagos registrados"
+                           HorizontalTextAlignment="Center"
+                           TextColor="Gray" />
+                </StackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Payment">
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Eliminar"
+                                          BackgroundColor="Red"
+                                          Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:PaymentsViewModel}}, Path=DeletePaymentCommand}"
+                                          CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <Frame Margin="0,5" Padding="15" BorderColor="LightGray">
+                            <VerticalStackLayout Spacing="5">
+                                <Label Text="{Binding Person.Nombre}" FontAttributes="Bold" FontSize="16" />
+                                <Label Text="{Binding Ano, StringFormat='Ano: {0}'}" TextColor="Gray" FontSize="14" />
+                                <Label Text="{Binding Mes, StringFormat='Mes: {0}'}" TextColor="Gray" FontSize="14" />
+                                <Label Text="{Binding Fecha, StringFormat='Fecha: {0:dd/MM/yyyy}'}" 
+                                       TextColor="DarkGray" 
+                                       FontSize="12" />
+                            </VerticalStackLayout>
+                        </Frame>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Loading Indicator -->
+        <ActivityIndicator Grid.Row="1"
+                          IsRunning="{Binding IsBusy}"
+                          IsVisible="{Binding IsBusy}"
+                          Color="Blue"
+                          VerticalOptions="Center"
+                          HorizontalOptions="Center" />
+    </Grid>
+</ContentPage>

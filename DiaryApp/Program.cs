@@ -1,4 +1,5 @@
-using DiaryApp.Data;
+using DiaryApp.Core.Data;
+using DiaryApp.Core.Interfaces;
 using DiaryApp.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,7 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddDbContext<AplicationDbContext>(
+
+// Usar ApplicationDbContext de Core
+builder.Services.AddDbContext<ApplicationDbContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("defaultConnection")));
 
 // Registrar el servicio de Azure Blob Storage
@@ -18,15 +21,12 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseRouting();
-
 app.UseAuthorization();
-
 app.MapStaticAssets();
 
 app.MapControllerRoute(

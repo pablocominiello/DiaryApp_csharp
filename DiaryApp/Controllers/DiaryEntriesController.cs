@@ -1,6 +1,6 @@
-﻿using DiaryApp.Data;
-using DiaryApp.Services;
-using Microsoft.AspNetCore.Http;
+﻿using DiaryApp.Core.Data;
+using DiaryApp.Core.Models;
+using DiaryApp.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using X.PagedList.Extensions;
 
@@ -8,9 +8,9 @@ namespace DiaryApp.Controllers
 {
     public class DiaryEntriesController : Controller
     {
-        private readonly AplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
-        public DiaryEntriesController(AplicationDbContext db)
+        public DiaryEntriesController(ApplicationDbContext db)
         {
             _db = db;
         }
@@ -18,7 +18,7 @@ namespace DiaryApp.Controllers
         // GET: DiaryEntriesController1 
         public ActionResult Index()
         {
-            List<Models.DiaryEntry> objDiaryEntryList = _db.DiaryEntries.ToList();
+            List<DiaryEntry> objDiaryEntryList = _db.DiaryEntries.ToList();
 
             return View(objDiaryEntryList);
         }
@@ -36,7 +36,7 @@ namespace DiaryApp.Controllers
 
         [HttpPost]
         // GET: DiaryEntriesController1/Create
-        public ActionResult Create(DiaryApp.Models.DiaryEntry obj)
+        public ActionResult Create(DiaryEntry obj)
         {
             // Server-side validation example
             if (obj != null && obj.Title.Length < 3)
@@ -64,7 +64,7 @@ namespace DiaryApp.Controllers
                 return NotFound();
             }
 
-            Models.DiaryEntry diaryEntry = _db.DiaryEntries.Find(id);
+            DiaryEntry diaryEntry = _db.DiaryEntries.Find(id);
 
             if (diaryEntry == null)
             {
@@ -76,7 +76,7 @@ namespace DiaryApp.Controllers
         // POST: DiaryEntriesController1/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(DiaryApp.Models.DiaryEntry obj)
+        public ActionResult Edit(DiaryEntry obj)
         {
             // Server-side validation example
             if (obj != null && obj.Title.Length < 3)
@@ -104,7 +104,7 @@ namespace DiaryApp.Controllers
                 return NotFound();
             }
 
-            Models.DiaryEntry diaryEntry = _db.DiaryEntries.Find(id);
+            DiaryEntry diaryEntry = _db.DiaryEntries.Find(id);
 
             if (diaryEntry == null)
             {
@@ -116,7 +116,7 @@ namespace DiaryApp.Controllers
         // POST: DiaryEntriesController1/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(DiaryApp.Models.DiaryEntry obj)
+        public ActionResult Delete(DiaryEntry obj)
         {
             // Server-side validation example
             if (obj != null && obj.Title.Length < 3)
@@ -137,10 +137,10 @@ namespace DiaryApp.Controllers
     
     public class PersonsController : Controller
     {
-        private readonly AplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
         private readonly IBlobStorageService _blobStorageService;
 
-        public PersonsController(AplicationDbContext db, IBlobStorageService blobStorageService)
+        public PersonsController(ApplicationDbContext db, IBlobStorageService blobStorageService)
         {
             _db = db;
             _blobStorageService = blobStorageService;
@@ -185,7 +185,7 @@ namespace DiaryApp.Controllers
         
         [HttpPost]
         // POST: PersonsController/Create
-        public async Task<ActionResult> Create(DiaryApp.Models.Person obj, IFormFile? imagenFile)
+        public async Task<ActionResult> Create(Person obj, IFormFile? imagenFile)
         {
             // Server-side validation example
             if (obj != null && obj.Nombre.Length < 3)
@@ -200,7 +200,8 @@ namespace DiaryApp.Controllers
                 {
                     try
                     {
-                        obj.ImagenUrl = await _blobStorageService.UploadImageAsync(imagenFile, "persons");
+                        using var stream = imagenFile.OpenReadStream();
+                        obj.ImagenUrl = await _blobStorageService.UploadImageAsync(stream, imagenFile.FileName, "persons");
                     }
                     catch (Exception ex)
                     {
@@ -227,7 +228,7 @@ namespace DiaryApp.Controllers
                 return NotFound();
             }
 
-            Models.Person person = _db.Peoples.Find(id);
+            Person person = _db.Peoples.Find(id);
 
             if (person == null)
             {
@@ -239,7 +240,7 @@ namespace DiaryApp.Controllers
         // POST: DiaryEntriesController1/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit(DiaryApp.Models.Person obj, IFormFile? imagenFile)
+        public async Task<ActionResult> Edit(Person obj, IFormFile? imagenFile)
         {
             // Server-side validation example
             if (obj != null && obj.Nombre.Length < 3)
@@ -261,7 +262,8 @@ namespace DiaryApp.Controllers
                         }
 
                         // Subir nueva imagen a Azure Blob Storage
-                        obj.ImagenUrl = await _blobStorageService.UploadImageAsync(imagenFile, "persons");
+                        using var stream = imagenFile.OpenReadStream();
+                        obj.ImagenUrl = await _blobStorageService.UploadImageAsync(stream, imagenFile.FileName, "persons");
                     }
                     catch (Exception ex)
                     {
@@ -288,7 +290,7 @@ namespace DiaryApp.Controllers
                 return NotFound();
             }
 
-            Models.Person objperson = _db.Peoples.Find(id);
+            Person objperson = _db.Peoples.Find(id);
 
             if (objperson == null)
             {
@@ -300,7 +302,7 @@ namespace DiaryApp.Controllers
         // POST: DiaryEntriesController1/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Delete(DiaryApp.Models.Person obj)
+        public async Task<ActionResult> Delete(Person obj)
         {
             // Server-side validation example
             if (obj != null && obj.Nombre.Length < 3)
