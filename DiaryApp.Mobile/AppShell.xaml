@@ -3,27 +3,32 @@
     x:Class="DiaryApp.Mobile.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DiaryApp.Mobile"
     xmlns:views="clr-namespace:DiaryApp.Mobile.Views"
+    Shell.FlyoutBehavior="Disabled"
     Title="DiaryApp.Mobile">
 
     <TabBar>
         <ShellContent
+            Title="Diario"
+            ContentTemplate="{DataTemplate views:DiaryEntriesPage}"
+            Icon="diary_icon.png" />
+
+        <ShellContent
             Title="Personas"
             ContentTemplate="{DataTemplate views:PersonsPage}"
-            Icon="person.png"
-            Route="PersonsPage" />
-        
-        <ShellContent
-            Title="Diary"
-            ContentTemplate="{DataTemplate views:DiaryEntriesPage}"
-            Icon="diary.png"
-            Route="DiaryEntriesPage" />
-        
+            Icon="person_icon.png" />
+
         <ShellContent
             Title="Pagos"
             ContentTemplate="{DataTemplate views:PaymentsPage}"
-            Icon="payment.png"
-            Route="PaymentsPage" />
+            Icon="payment_icon.png" />
+        
+        <!-- NUEVA PESTAÑA -->
+        <ShellContent
+            Title="Diagnóstico"
+            ContentTemplate="{DataTemplate views:DiagnosticsPage}"
+            Icon="settings_icon.png" />
     </TabBar>
 
 </Shell>

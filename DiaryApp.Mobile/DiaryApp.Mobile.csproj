@@ -78,4 +78,10 @@
 		<PackageReference Include="CommunityToolkit.Maui" Version="9.1.1" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <MauiXaml Update="Views\DiagnosticsPage.xaml">
+	    <SubType>Designer</SubType>
+	  </MauiXaml>
+	</ItemGroup>
+
 </Project>

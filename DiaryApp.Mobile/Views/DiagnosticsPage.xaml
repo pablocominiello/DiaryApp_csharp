@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:DiaryApp.Mobile.ViewModels"
+             x:Class="DiaryApp.Mobile.Views.DiagnosticsPage"
+             x:DataType="viewmodels:DiagnosticsViewModel"
+             Title="{Binding Title}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+
+            <Label Text="Información de la Base de Datos"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,10" />
+
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Estado de la Base de Datos"
+                           FontSize="18"
+                           FontAttributes="Bold" />
+
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="5">
+                        <Label Grid.Row="0" Grid.Column="0" Text="Estado:" FontAttributes="Bold" />
+                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding DatabaseExists}" />
+
+                        <Label Grid.Row="1" Grid.Column="0" Text="Tamaño:" FontAttributes="Bold" />
+                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding DatabaseSize}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Registros en la Base de Datos"
+                           FontSize="18"
+                           FontAttributes="Bold" />
+
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="5">
+                        <Label Grid.Row="0" Grid.Column="0" Text="Personas:" FontAttributes="Bold" />
+                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding PersonCount}" />
+
+                        <Label Grid.Row="1" Grid.Column="0" Text="Entradas del Diario:" FontAttributes="Bold" />
+                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding DiaryEntryCount}" />
+
+                        <Label Grid.Row="2" Grid.Column="0" Text="Pagos:" FontAttributes="Bold" />
+                        <Label Grid.Row="2" Grid.Column="1" Text="{Binding PaymentCount}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Ruta del Archivo de Base de Datos"
+                           FontSize="18"
+                           FontAttributes="Bold" />
+
+                    <Label Text="{Binding DatabasePath}"
+                           FontSize="12"
+                           TextColor="Gray"
+                           LineBreakMode="WordWrap" />
+
+                    <Button Text="Copiar Ruta"
+                            Command="{Binding CopyPathCommand}"
+                            HorizontalOptions="Start" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Directorio de Datos de la App"
+                           FontSize="18"
+                           FontAttributes="Bold" />
+
+                    <Label Text="{Binding AppDataDirectory}"
+                           FontSize="12"
+                           TextColor="Gray"
+                           LineBreakMode="WordWrap" />
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Copiar Directorio"
+                                Command="{Binding CopyDirectoryCommand}" />
+
+                        <Button Text="Abrir Carpeta"
+                                Command="{Binding OpenFolderCommand}" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button Text="Actualizar Información"
+                    Command="{Binding LoadDatabaseInfoCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    HorizontalOptions="Fill"
+                    Margin="0,10,0,0" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                              IsVisible="{Binding IsBusy}"
+                              Color="Blue"
+                              HeightRequest="50" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
