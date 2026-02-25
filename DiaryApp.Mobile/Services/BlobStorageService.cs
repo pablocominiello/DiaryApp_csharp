@@ -1,28 +1,20 @@
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 
 namespace DiaryApp.Mobile.Services;
 
 public class BlobStorageService : IBlobStorageService
 {
-    private readonly BlobServiceClient? _blobServiceClient;
+    private readonly BlobServiceClient _blobServiceClient;
 
-    public BlobStorageService()
+    // ✅ Constructor que acepta string directamente
+    public BlobStorageService(string connectionString)
     {
-        // TODO: Configurar connection string desde appsettings o Preferences
-        var connectionString = Preferences.Get("AzureBlobStorageConnectionString", string.Empty);
-        
-        if (!string.IsNullOrEmpty(connectionString))
-        {
-            _blobServiceClient = new BlobServiceClient(connectionString);
-        }
+        _blobServiceClient = new BlobServiceClient(connectionString);
     }
 
     public async Task<string> UploadImageAsync(Stream imageStream, string fileName, string containerName = "imagenes")
     {
-        if (_blobServiceClient == null)
-            throw new InvalidOperationException("Azure Blob Storage no est� configurado");
-
         if (imageStream == null || imageStream.Length == 0)
             throw new ArgumentException("Stream is empty");
 
@@ -42,7 +34,7 @@ public class BlobStorageService : IBlobStorageService
 
     public async Task<bool> DeleteImageAsync(string blobUrl, string containerName = "imagenes")
     {
-        if (_blobServiceClient == null || string.IsNullOrEmpty(blobUrl))
+        if (string.IsNullOrEmpty(blobUrl))
             return false;
 
         try

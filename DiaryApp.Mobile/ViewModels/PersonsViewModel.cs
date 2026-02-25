@@ -1,14 +1,14 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DiaryApp.Mobile.Models;
 using DiaryApp.Mobile.Services;
+using DiaryApp.Shared.Models; // ✅ Usar el modelo compartido
 using System.Collections.ObjectModel;
 
 namespace DiaryApp.Mobile.ViewModels;
 
 public partial class PersonsViewModel : BaseViewModel
 {
-    private readonly IDatabaseService _databaseService;
+    private readonly IApiService _apiService;
 
     [ObservableProperty]
     private ObservableCollection<Person> persons = [];
@@ -16,9 +16,9 @@ public partial class PersonsViewModel : BaseViewModel
     [ObservableProperty]
     private string searchText = string.Empty;
 
-    public PersonsViewModel(IDatabaseService databaseService)
+    public PersonsViewModel(IApiService apiService)
     {
-        _databaseService = databaseService;
+        _apiService = apiService;
         Title = "Personas";
     }
 
@@ -31,7 +31,7 @@ public partial class PersonsViewModel : BaseViewModel
         try
         {
             IsBusy = true;
-            var items = await _databaseService.GetPersonsAsync(SearchText);
+            var items = await _apiService.GetPersonsAsync(SearchText);
             Persons.Clear();
             foreach (var item in items)
             {
@@ -70,11 +70,11 @@ public partial class PersonsViewModel : BaseViewModel
     private async Task DeletePersonAsync(Person person)
     {
         var confirm = await Shell.Current.DisplayAlert("Confirmar", 
-            $"�Desea eliminar a {person.Nombre}?", "S�", "No");
+            $"¿Desea eliminar a {person.Nombre}?", "Sí", "No");
         
         if (confirm)
         {
-            await _databaseService.DeletePersonAsync(person);
+            await _apiService.DeletePersonAsync(person.Id);
             await LoadPersonsAsync();
         }
     }

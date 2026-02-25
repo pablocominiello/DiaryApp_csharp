@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DiaryApp.Mobile.Services;
 
@@ -6,14 +6,12 @@ namespace DiaryApp.Mobile.ViewModels;
 
 public partial class DiagnosticsViewModel : BaseViewModel
 {
+    // ✅ SOLO estas propiedades
     [ObservableProperty]
-    private string databasePath = string.Empty;
+    private string apiUrl = string.Empty;
 
     [ObservableProperty]
-    private bool databaseExists;
-
-    [ObservableProperty]
-    private string databaseSize = string.Empty;
+    private string apiStatus = string.Empty;
 
     [ObservableProperty]
     private string appDataDirectory = string.Empty;
@@ -27,50 +25,61 @@ public partial class DiagnosticsViewModel : BaseViewModel
     [ObservableProperty]
     private int paymentCount;
 
-    private readonly IDatabaseService _databaseService;
+    [ObservableProperty]
+    private string connectionMode = string.Empty;
 
-    public DiagnosticsViewModel(IDatabaseService databaseService)
+    private readonly IApiService _apiService;
+
+    public DiagnosticsViewModel(IApiService apiService)
     {
-        _databaseService = databaseService;
-        Title = "Diagn�stico";
+        _apiService = apiService;
+        Title = "Diagnóstico";
+        
+#if DEBUG
+        ApiUrl = "https://10.0.2.2:7001/api";
+        ConnectionMode = "🔵 DEBUG - Servidor Local";
+#else
+        ApiUrl = "https://dev-diaryapp-c2cuanhkf2f6axee.canadacentral-01.azurewebsites.net/api";
+        ConnectionMode = "🟢 RELEASE - Azure Cloud";
+#endif
+
+        AppDataDirectory = FileSystem.AppDataDirectory;
         LoadDatabaseInfo();
     }
 
     [RelayCommand]
     private async Task LoadDatabaseInfo()
     {
+        if (IsBusy)
+            return;
+
         try
         {
             IsBusy = true;
+            ApiStatus = "🔄 Conectando...";
 
-            // Informaci�n de rutas
-            DatabasePath = Path.Combine(FileSystem.AppDataDirectory, "diaryapp.db3");
-            AppDataDirectory = FileSystem.AppDataDirectory;
-            DatabaseExists = File.Exists(DatabasePath);
+            var persons = await _apiService.GetPersonsAsync();
+            PersonCount = persons?.Count ?? 0;
 
-            if (DatabaseExists)
-            {
-                var fileInfo = new FileInfo(DatabasePath);
-                DatabaseSize = $"{fileInfo.Length / 1024.0:F2} KB";
-            }
-            else
-            {
-                DatabaseSize = "N/A";
-            }
+            var entries = await _apiService.GetDiaryEntriesAsync();
+            DiaryEntryCount = entries?.Count ?? 0;
 
-            // Contar registros
-            var persons = await _databaseService.GetPersonsAsync();
-            PersonCount = persons.Count;
+            var payments = await _apiService.GetPaymentsAsync();
+            PaymentCount = payments?.Count ?? 0;
 
-            var entries = await _databaseService.GetDiaryEntriesAsync();
-            DiaryEntryCount = entries.Count;
-
-            var payments = await _databaseService.GetPaymentsAsync();
-            PaymentCount = payments.Count;
+            ApiStatus = "✅ Conectado correctamente";
+        }
+        catch (HttpRequestException ex)
+        {
+            ApiStatus = $"❌ Error de conexión: {ex.Message}";
+            await Shell.Current.DisplayAlert("Error de Conexión", 
+                $"No se pudo conectar al servidor:\n{ex.Message}", "OK");
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Error", $"Error al cargar informaci�n: {ex.Message}", "OK");
+            ApiStatus = $"❌ Error: {ex.Message}";
+            await Shell.Current.DisplayAlert("Error", 
+                $"Error al cargar información:\n{ex.Message}", "OK");
         }
         finally
         {
@@ -79,30 +88,16 @@ public partial class DiagnosticsViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private async Task CopyPathAsync()
+    private async Task CopyApiUrlAsync()
     {
-        await Clipboard.SetTextAsync(DatabasePath);
-        await Shell.Current.DisplayAlert("Copiado", "Ruta copiada al portapapeles", "OK");
+        await Clipboard.SetTextAsync(ApiUrl);
+        await Shell.Current.DisplayAlert("Copiado", 
+            "URL del API copiada al portapapeles", "OK");
     }
 
     [RelayCommand]
-    private async Task CopyDirectoryAsync()
+    private async Task TestConnectionAsync()
     {
-        await Clipboard.SetTextAsync(AppDataDirectory);
-        await Shell.Current.DisplayAlert("Copiado", "Directorio copiado al portapapeles", "OK");
-    }
-
-    [RelayCommand]
-    private async Task OpenFolderAsync()
-    {
-        try
-        {
-            await Launcher.OpenAsync(new Uri($"file://{FileSystem.AppDataDirectory}"));
-        }
-        catch
-        {
-            await Shell.Current.DisplayAlert("Info", 
-                "No se puede abrir la carpeta autom�ticamente. Usa la ruta copiada.", "OK");
-        }
+        await LoadDatabaseInfo();
     }
 }

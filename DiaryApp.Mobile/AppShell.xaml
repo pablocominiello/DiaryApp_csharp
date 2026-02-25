@@ -24,7 +24,6 @@
             ContentTemplate="{DataTemplate views:PaymentsPage}"
             Icon="payment_icon.png" />
         
-        <!-- NUEVA PESTAÑA -->
         <ShellContent
             Title="Diagnóstico"
             ContentTemplate="{DataTemplate views:DiagnosticsPage}"
