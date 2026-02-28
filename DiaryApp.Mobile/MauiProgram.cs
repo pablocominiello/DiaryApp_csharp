@@ -1,11 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using CommunityToolkit.Maui;
-using Microsoft.EntityFrameworkCore;
-using DiaryApp.Mobile.Data;
 using DiaryApp.Mobile.Services;
 using DiaryApp.Mobile.ViewModels;
 using DiaryApp.Mobile.Views;
-using Microsoft.Extensions.Configuration;
 
 namespace DiaryApp.Mobile;
 
@@ -27,22 +24,16 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 #endif
 
-		// ✅ CRITICAL: Configurar SQLite Database
-		var dbPath = Path.Combine(FileSystem.AppDataDirectory, "diaryapp.db3");
-		builder.Services.AddDbContext<AppDbContext>(options =>
-			options.UseSqlite($"Filename={dbPath}"));
-
-		// ✅ CORREGIDO: Registrar BlobStorageService sin requerir conexión válida
-		// Si no tienes Azure Blob Storage configurado, usa una implementación dummy
+		// ✅ Registrar BlobStorageService (implementación local para desarrollo)
 		builder.Services.AddSingleton<IBlobStorageService>(sp =>
 		{
 			var connectionString = Environment.GetEnvironmentVariable("AZURE_BLOB_CONNECTION_STRING");
 			
-			// Si no hay connection string válida, retornar una implementación que no requiera Azure
+			// Si no hay connection string válida, usar implementación local
 			if (string.IsNullOrEmpty(connectionString) || connectionString.Contains("devaccount"))
 			{
 				System.Diagnostics.Debug.WriteLine("⚠️ Azure Blob Storage no configurado - usando implementación local");
-				return new LocalBlobStorageService(); // Implementación que guarda archivos localmente
+				return new LocalBlobStorageService();
 			}
 			
 			return new BlobStorageService(connectionString);
@@ -55,9 +46,6 @@ public static class MauiProgram
 			client.BaseAddress = new Uri("https://dev-diaryapp-c2cuanhkf2f6axee.canadacentral-01.azurewebsites.net/api/");
 			client.Timeout = TimeSpan.FromSeconds(30);
 		});
-
-		// ✅ Registrar IDatabaseService
-		builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
 
 		// Registrar ViewModels
 		builder.Services.AddTransient<PersonsViewModel>();

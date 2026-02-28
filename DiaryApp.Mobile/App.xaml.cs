@@ -4,7 +4,7 @@ namespace DiaryApp.Mobile;
 
 public partial class App : Application
 {
-    public App(IDatabaseService databaseService)
+    public App()
     {
         InitializeComponent();
 
@@ -21,19 +21,6 @@ public partial class App : Application
             System.Diagnostics.Debug.WriteLine($"❌ UNOBSERVED TASK EXCEPTION: {e.Exception?.Message}");
             e.SetObserved();
         };
-
-        // Inicializar la base de datos en un hilo en segundo plano
-        Task.Run(async () =>
-        {
-            try
-            {
-                await databaseService.InitializeDatabaseAsync();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"❌ DATABASE INIT ERROR: {ex.Message}");
-            }
-        });
 
         MainPage = new AppShell();
     }
