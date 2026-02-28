@@ -10,7 +10,7 @@
         <VerticalStackLayout Spacing="15">
 
             <!-- Image Picker -->
-            <Frame BorderColor="LightGray" Padding="0" HeightRequest="150">
+            <Frame BorderColor="LightGray" Padding="0" HeightRequest="150" CornerRadius="10">
                 <Grid>
                     <Image Source="{Binding ImagenUrl}" 
                            Aspect="AspectFill" />
@@ -18,30 +18,52 @@
                             Command="{Binding PickImageCommand}"
                             VerticalOptions="End"
                             Margin="10"
-                            Opacity="0.8" />
+                            BackgroundColor="#512BD4"
+                            TextColor="White"
+                            Opacity="0.9" />
                 </Grid>
             </Frame>
 
             <!-- Nombre -->
             <Label Text="Nombre:" FontAttributes="Bold" />
-            <Entry Text="{Binding Nombre}" Placeholder="Ingrese el nombre" />
+            <Entry Text="{Binding Nombre}" 
+                   Placeholder="Ingrese el nombre"
+                   MaxLength="100" />
 
             <!-- Content -->
             <Label Text="Observaciones:" FontAttributes="Bold" />
             <Editor Text="{Binding Content}" 
                     Placeholder="Ingrese observaciones"
-                    HeightRequest="100" />
+                    MaxLength="250"
+                    HeightRequest="100"
+                    AutoSize="TextChanges" />
 
             <!-- Born Date -->
             <Label Text="Fecha de Nacimiento:" FontAttributes="Bold" />
-            <DatePicker Date="{Binding Born}" />
+            <DatePicker Date="{Binding Born}" 
+                        MaximumDate="{x:Static x:DateTime.Now}" />
 
-            <!-- Save Button -->
-            <Button Text="Guardar"
-                    Command="{Binding SaveCommand}"
-                    BackgroundColor="#512BD4"
-                    TextColor="White"
-                    Margin="0,20,0,0" />
+            <!-- Buttons -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,20,0,0">
+                <Button Grid.Column="0"
+                        Text="Cancelar"
+                        Command="{Binding CancelCommand}"
+                        BackgroundColor="Gray"
+                        TextColor="White" />
+                
+                <Button Grid.Column="1"
+                        Text="Guardar"
+                        Command="{Binding SaveCommand}"
+                        BackgroundColor="#512BD4"
+                        TextColor="White" />
+            </Grid>
+
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                              IsVisible="{Binding IsBusy}"
+                              Color="#512BD4"
+                              VerticalOptions="Center"
+                              HorizontalOptions="Center" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

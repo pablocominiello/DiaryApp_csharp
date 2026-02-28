@@ -27,19 +27,25 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 #endif
 
-		// ✅ CRITICAL: Configurar SQLite Database (faltaba esto!)
+		// ✅ CRITICAL: Configurar SQLite Database
 		var dbPath = Path.Combine(FileSystem.AppDataDirectory, "diaryapp.db3");
 		builder.Services.AddDbContext<AppDbContext>(options =>
 			options.UseSqlite($"Filename={dbPath}"));
 
-		// ✅ Configurar Azure Blob Storage connection string
-		var azureBlobConnectionString = Environment.GetEnvironmentVariable("AZURE_BLOB_CONNECTION_STRING") 
-			?? "DefaultEndpointsProtocol=https;AccountName=devaccount;AccountKey=devkey;EndpointSuffix=core.windows.net";
-		
-		// ✅ Registrar BlobStorageService con factory
+		// ✅ CORREGIDO: Registrar BlobStorageService sin requerir conexión válida
+		// Si no tienes Azure Blob Storage configurado, usa una implementación dummy
 		builder.Services.AddSingleton<IBlobStorageService>(sp =>
 		{
-			return new BlobStorageService(azureBlobConnectionString);
+			var connectionString = Environment.GetEnvironmentVariable("AZURE_BLOB_CONNECTION_STRING");
+			
+			// Si no hay connection string válida, retornar una implementación que no requiera Azure
+			if (string.IsNullOrEmpty(connectionString) || connectionString.Contains("devaccount"))
+			{
+				System.Diagnostics.Debug.WriteLine("⚠️ Azure Blob Storage no configurado - usando implementación local");
+				return new LocalBlobStorageService(); // Implementación que guarda archivos localmente
+			}
+			
+			return new BlobStorageService(connectionString);
 		});
 
 		// ✅ Registrar HttpClient y ApiService apuntando a Azure
@@ -50,7 +56,7 @@ public static class MauiProgram
 			client.Timeout = TimeSpan.FromSeconds(30);
 		});
 
-		// ✅ Registrar IDatabaseService (ahora AppDbContext está disponible)
+		// ✅ Registrar IDatabaseService
 		builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
 
 		// Registrar ViewModels
