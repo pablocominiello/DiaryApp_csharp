@@ -10,14 +10,14 @@
 
     <TabBar>
         <ShellContent
-            Title="Diario"
-            ContentTemplate="{DataTemplate views:DiaryEntriesPage}"
-            Icon="diary_icon.png" />
-
-        <ShellContent
             Title="Personas"
             ContentTemplate="{DataTemplate views:PersonsPage}"
             Icon="person_icon.png" />
+
+        <ShellContent
+            Title="Diario"
+            ContentTemplate="{DataTemplate views:DiaryEntriesPage}"
+            Icon="diary_icon.png" />
 
         <ShellContent
             Title="Pagos"
