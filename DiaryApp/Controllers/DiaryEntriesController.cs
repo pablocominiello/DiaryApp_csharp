@@ -1,5 +1,5 @@
 ﻿using DiaryApp.Core.Data;
-using DiaryApp.Core.Models;
+using DiaryApp.Shared.Models; // ✅ Cambiar de DiaryApp.Core.Models
 using DiaryApp.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using X.PagedList.Extensions;

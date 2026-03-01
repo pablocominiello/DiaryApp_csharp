@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using DiaryApp.Api.Data;
+using DiaryApp.Core.Data; // ✅ Cambiar de DiaryApp.Api.Data
 using DiaryApp.Shared.Models;
 
 namespace DiaryApp.Api.Controllers;
@@ -9,9 +9,9 @@ namespace DiaryApp.Api.Controllers;
 [Route("api/[controller]")]
 public class PaymentsController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly ApplicationDbContext _context; // ✅ Cambiar de AppDbContext
 
-    public PaymentsController(AppDbContext context)
+    public PaymentsController(ApplicationDbContext context) // ✅ Cambiar tipo
     {
         _context = context;
     }
@@ -57,7 +57,7 @@ public class PaymentsController : ControllerBase
 
         if (exists)
         {
-            return Conflict("Ya existe un pago para esta persona en este per�odo");
+            return Conflict("Ya existe un pago para esta persona en este período");
         }
 
         payment.Fecha = DateTime.Now;
@@ -83,7 +83,7 @@ public class PaymentsController : ControllerBase
 
         if (exists)
         {
-            return Conflict("Ya existe un pago para esta persona en este per�odo");
+            return Conflict("Ya existe un pago para esta persona en este período");
         }
 
         _context.Entry(payment).State = EntityState.Modified;

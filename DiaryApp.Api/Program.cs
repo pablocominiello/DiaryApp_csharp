@@ -1,4 +1,4 @@
-﻿using DiaryApp.Api.Data;
+﻿using DiaryApp.Core.Data; // ✅ Cambiar de DiaryApp.Api.Data a DiaryApp.Core.Data
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -17,14 +17,14 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configurar DbContext con SQL Server
-builder.Services.AddDbContext<AppDbContext>(options =>
+// ✅ Configurar DbContext con SQL Server - USAR ApplicationDbContext de Core
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configurar CORS para permitir requests desde MAUI
+// Configurar CORS para permitir requests desde MAUI y Web
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowMauiApp", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyOrigin()
               .AllowAnyMethod()
@@ -42,7 +42,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowMauiApp");
+app.UseCors("AllowAll");
 app.UseAuthorization();
 
 // ✅ Agregar un endpoint raíz para evitar el 404

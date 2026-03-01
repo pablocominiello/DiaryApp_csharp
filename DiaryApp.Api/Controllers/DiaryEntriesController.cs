@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using DiaryApp.Api.Data;
+using DiaryApp.Core.Data; // ✅ Cambiar de DiaryApp.Api.Data
 using DiaryApp.Shared.Models;
 
 namespace DiaryApp.Api.Controllers;
@@ -9,9 +9,9 @@ namespace DiaryApp.Api.Controllers;
 [Route("api/[controller]")]
 public class DiaryEntriesController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly ApplicationDbContext _context; // ✅ Cambiar de AppDbContext
 
-    public DiaryEntriesController(AppDbContext context)
+    public DiaryEntriesController(ApplicationDbContext context) // ✅ Cambiar tipo
     {
         _context = context;
     }
