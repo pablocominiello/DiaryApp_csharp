@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Tus paquetes NuGet existentes -->
     <PackageReference Include="Azure.Storage.Blobs" Version="12.22.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.11" />
@@ -15,11 +14,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="X.PagedList" Version="10.1.2" />
-    <PackageReference Include="X.PagedList.Mvc.Core" Version="10.1.0" />
+    <PackageReference Include="PagedList.Core.Mvc" Version="3.0.0" />
+    <!-- ✅ ACTUALIZAR X.PagedList a versiones más recientes -->
   </ItemGroup>
 
-  <!-- ✅ AGREGAR REFERENCIAS A LOS PROYECTOS COMPARTIDOS -->
   <ItemGroup>
     <ProjectReference Include="..\DiaryApp.Core\DiaryApp.Core.csproj" />
     <ProjectReference Include="..\DiaryApp.Shared\DiaryApp.Shared.csproj" />

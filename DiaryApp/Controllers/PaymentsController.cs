@@ -1,5 +1,5 @@
-using DiaryApp.Core.Data;
-using DiaryApp.Core.Models;
+﻿using DiaryApp.Core.Data;
+using DiaryApp.Shared.Models; // ✅ Cambiar de DiaryApp.Core.Models
 using DiaryApp.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -25,7 +25,7 @@ namespace DiaryApp.Controllers
                 .Include(p => p.Person)
                 .AsQueryable();
 
-            // Filtrar por persona si se proporciona el par�metro
+            // Filtrar por persona si se proporciona el parámetro
             if (personId.HasValue && personId.Value > 0)
             {
                 paymentsQuery = paymentsQuery.Where(p => p.PeoplesId == personId.Value);
@@ -223,7 +223,7 @@ namespace DiaryApp.Controllers
                 }
                 catch
                 {
-                    // Continuar con la eliminaci�n aunque falle eliminar el comprobante
+                    // Continuar con la eliminación aunque falle eliminar el comprobante
                 }
             }
 

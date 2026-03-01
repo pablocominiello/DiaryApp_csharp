@@ -1,54 +1,39 @@
-@*
+ï»¿@*
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
 @{
 }
-@model Person
+@model DiaryApp.Models.Person
 
 <div class="text-center">
     <div class="card">
         <div class="card-header">
-            <h1 class="display-4">Editar Personas</h1>
+            <h1 class="display-4">Agregar Persona</h1>
         </div>
         <div class="card-body">
-            <form asp-action="Edit" method="post" enctype="multipart/form-data">
-                <input type="hidden" asp-for="Id" />
-                <input type="hidden" asp-for="ImagenUrl" />
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
                 <div asp-validation-summary="All" class="text-bg-danger"></div>
                 <div class="card-group">
                     <label asp-for="Nombre" class="form-label"></label>
-                    <input asp-for="Nombre" class="form-control" placeholder="Ingrese un Nombre">
+                    <input asp-for="Nombre" class="form-control" placeholder="Enter Title" />
                     <span asp-validation-for="Nombre" class="text-bg-danger"></span>
                 </div>
                 <div class="card-group">
                     <label asp-for="Content" class="form-label"></label>
-                    <input asp-for="Content" row="5" class="form-control" placeholder="Apodo" />
+                    <input asp-for="Content" row="5" class="form-control" placeholder="Enter what you do" />
                     <span asp-validation-for="Content" class="text-bg-danger"></span>
+
                 </div>
                 <div class="card-group">
                     <label asp-for="Born" class="form-label"></label>
                     <input asp-for="Born" class="form-control" type="date" />
                 </div>
                 <div class="card-group">
-                    <label class="form-label">Imagen Actual</label>
-                    @if (!string.IsNullOrEmpty(Model.ImagenUrl))
-                    {
-                        <div class="mb-2">
-                            <img src="@Model.ImagenUrl" alt="@Model.Nombre" style="max-width: 200px; max-height: 200px; object-fit: cover; border-radius: 5px;" />
-                        </div>
-                    }
-                    else
-                    {
-                        <p class="text-muted">Sin imagen actual</p>
-                    }
-                </div>
-                <div class="card-group">
-                    <label class="form-label">Cambiar Imagen</label>
+                    <label class="form-label">Imagen</label>
                     <input type="file" name="imagenFile" class="form-control" accept="image/*" />
-                    <small class="text-muted">Deja vacío si no deseas cambiar la imagen</small>
                 </div>
                 <div class="d-flex justify-content-between"></div>
-                <button type="submit" class="btn btn-primary">Edit</button>
+                <button type="submit" class="btn btn-primary">Create</button>
                 <a asp-controller="Persons" asp-action="Index" class="btn btn-secondary">Cancel</a>
             </form>
         </div>

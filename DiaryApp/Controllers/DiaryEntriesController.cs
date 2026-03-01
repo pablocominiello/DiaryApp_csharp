@@ -1,8 +1,8 @@
 ﻿using DiaryApp.Core.Data;
-using DiaryApp.Shared.Models; // ✅ Cambiar de DiaryApp.Core.Models
+using DiaryApp.Shared.Models;
 using DiaryApp.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using X.PagedList.Extensions;
+using PagedList.Core; // ✅ Agregar
 
 namespace DiaryApp.Controllers
 {
@@ -161,15 +161,18 @@ namespace DiaryApp.Controllers
                 peoplesQuery = peoplesQuery.Where(p => p.Nombre.Contains(searchString));
             }
 
-            // Ordenar y paginar
-            var objPersonList = peoplesQuery
+            // Ordenar y obtener lista
+            var allPersons = peoplesQuery
                 .OrderBy(p => p.Nombre)
-                .ToPagedList(pageNumber, pageSize);
+                .ToList();
+
+            // ✅ Crear PagedList manualmente usando el constructor
+            var pagedList = new PagedList<Person>(allPersons, pageNumber, pageSize);
 
             // Pasar el término de búsqueda a la vista para mantenerlo en el formulario
             ViewBag.SearchString = searchString;
 
-            return View(objPersonList);
+            return View(pagedList);
         }
 
         // GET: PeoplesController1/Details/5

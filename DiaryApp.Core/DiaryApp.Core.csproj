@@ -16,8 +16,6 @@
     <ProjectReference Include="..\DiaryApp.Shared\DiaryApp.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Data\" />
-  </ItemGroup>
+  <!-- ❌ NO debe haber ninguna referencia a carpeta Models -->
 
 </Project>
