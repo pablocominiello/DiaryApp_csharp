@@ -1,4 +1,4 @@
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using DiaryApp.Core.Interfaces;
 
@@ -10,6 +10,7 @@ namespace DiaryApp.Services
 
         public BlobStorageService(IConfiguration configuration)
         {
+            // ✅ Este código ya funciona con User Secrets
             var connectionString = configuration.GetConnectionString("AzureBlobStorage");
             _blobServiceClient = new BlobServiceClient(connectionString);
         }
