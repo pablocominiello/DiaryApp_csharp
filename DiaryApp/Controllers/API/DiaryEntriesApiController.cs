@@ -3,10 +3,10 @@ using DiaryApp.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace DiaryApp.Controllers.API
+namespace DiaryApp.Controllers.Api
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class DiaryEntriesController : ControllerBase
     {
         private readonly ApplicationDbContext _db;

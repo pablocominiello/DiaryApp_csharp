@@ -3,10 +3,10 @@ using DiaryApp.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace DiaryApp.Controllers.API
+namespace DiaryApp.Controllers.Api
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class PaymentsController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
@@ -29,6 +29,8 @@ namespace DiaryApp.Controllers.API
 
             var payments = await query
                 .OrderByDescending(p => p.Fecha)
+                .ThenByDescending(p => p.Ano)
+                .ThenByDescending(p => p.Mes)
                 .ToListAsync();
 
             return Ok(payments);
@@ -57,15 +59,22 @@ namespace DiaryApp.Controllers.API
                 return BadRequest(ModelState);
             }
 
-            // Verificar si ya existe un pago para esa persona en ese mes/año
-            var existingPayment = await _db.Payments
-                .FirstOrDefaultAsync(p => p.PeoplesId == payment.PeoplesId && 
-                                        p.Ano == payment.Ano && 
-                                        p.Mes == payment.Mes);
-
-            if (existingPayment != null)
+            // Verificar que la persona existe
+            var personExists = await _db.Peoples.AnyAsync(p => p.Id == payment.PeoplesId);
+            if (!personExists)
             {
-                return Conflict(new { message = "Ya existe un pago para esta persona en este mes/año" });
+                return BadRequest("La persona especificada no existe");
+            }
+
+            // Verificar duplicados (mismo mes/año para la misma persona)
+            var duplicate = await _db.Payments.AnyAsync(p => 
+                p.PeoplesId == payment.PeoplesId && 
+                p.Ano == payment.Ano && 
+                p.Mes == payment.Mes);
+
+            if (duplicate)
+            {
+                return BadRequest("Ya existe un pago para esta persona en el mes/año especificado");
             }
 
             _db.Payments.Add(payment);
@@ -80,7 +89,31 @@ namespace DiaryApp.Controllers.API
         {
             if (id != payment.Id)
             {
-                return BadRequest();
+                return BadRequest("ID mismatch");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Verificar que la persona existe
+            var personExists = await _db.Peoples.AnyAsync(p => p.Id == payment.PeoplesId);
+            if (!personExists)
+            {
+                return BadRequest("La persona especificada no existe");
+            }
+
+            // Verificar duplicados (excluyendo el registro actual)
+            var duplicate = await _db.Payments.AnyAsync(p => 
+                p.Id != id &&
+                p.PeoplesId == payment.PeoplesId && 
+                p.Ano == payment.Ano && 
+                p.Mes == payment.Mes);
+
+            if (duplicate)
+            {
+                return BadRequest("Ya existe un pago para esta persona en el mes/año especificado");
             }
 
             _db.Entry(payment).State = EntityState.Modified;

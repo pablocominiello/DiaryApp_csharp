@@ -106,6 +106,35 @@ public class ApiService : IApiService
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task<string> UploadPersonImageAsync(int personId, string base64Image, string fileName)
+    {
+        try
+        {
+            var payload = new
+            {
+                PersonId = personId,
+                Base64Image = base64Image,
+                FileName = fileName
+            };
+
+            var json = JsonSerializer.Serialize(payload, _jsonOptions);
+            var response = await _httpClient.PostAsync("persons/upload-image", 
+                new StringContent(json, System.Text.Encoding.UTF8, "application/json"));
+            
+            response.EnsureSuccessStatusCode();
+            
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<ImageUploadResponse>(content, _jsonOptions);
+            
+            return result?.ImageUrl ?? throw new Exception("No image URL returned");
+        }
+        catch (HttpRequestException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"HTTP Error uploading image: {ex.Message}");
+            throw new Exception($"Error uploading image: {ex.Message}", ex);
+        }
+    }
+
     // DiaryEntries
     public async Task<List<DiaryEntry>> GetDiaryEntriesAsync()
     {
@@ -193,5 +222,11 @@ public class ApiService : IApiService
     {
         var response = await _httpClient.DeleteAsync($"payments/{id}");
         response.EnsureSuccessStatusCode();
+    }
+
+    // Helper class for image upload response
+    private class ImageUploadResponse
+    {
+        public string? ImageUrl { get; set; }
     }
 }

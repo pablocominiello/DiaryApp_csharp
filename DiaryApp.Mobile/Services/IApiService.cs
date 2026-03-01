@@ -9,6 +9,7 @@ public interface IApiService
     Task<Person> CreatePersonAsync(Person person);
     Task UpdatePersonAsync(Person person);
     Task DeletePersonAsync(int id);
+    Task<string> UploadPersonImageAsync(int personId, string base64Image, string fileName);
 
     Task<List<DiaryEntry>> GetDiaryEntriesAsync();
     Task<DiaryEntry?> GetDiaryEntryAsync(int id);

@@ -11,9 +11,9 @@
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
             
-            <!-- Agregar los convertidores -->
-            <converters:BoolToTextConverter x:Key="BoolToTextConverter" />
-            <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
+            <!-- ✅ Registrar convertidores -->
+            <converters:IsNullConverter x:Key="IsNullConverter" />
+            <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

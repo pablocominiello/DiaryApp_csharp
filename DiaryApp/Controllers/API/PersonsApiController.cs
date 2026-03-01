@@ -1,12 +1,19 @@
 using DiaryApp.Core.Data;
+using DiaryApp.Core.Interfaces;
+using DiaryApp.Core.Interfaces;
+using DiaryApp.Core.Interfaces;
 using DiaryApp.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace DiaryApp.Controllers.API
+namespace DiaryApp.Controllers.Api;
+
+[ApiController]
+[Route("api/persons")]
+public class PersonsApiController : ControllerBase
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class PersonsController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
@@ -20,25 +27,18 @@ namespace DiaryApp.Controllers.API
         [HttpGet]
         public async Task<ActionResult<List<Person>>> GetPersons([FromQuery] string? searchText = null)
         {
-            try
+            var query = _db.Peoples.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchText))
             {
-                var query = _db.Peoples.AsQueryable();
-
-                if (!string.IsNullOrWhiteSpace(searchText))
-                {
-                    query = query.Where(p => p.Nombre.Contains(searchText));
-                }
-
-                var persons = await query
-                    .OrderBy(p => p.Nombre)
-                    .ToListAsync();
-
-                return Ok(persons);
+                query = query.Where(p => p.Nombre.Contains(searchText));
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = $"Error: {ex.Message}" });
-            }
+
+            var persons = await query
+                .OrderBy(p => p.Nombre)
+                .ToListAsync();
+
+            return Ok(persons);
         }
 
         // GET: api/persons/5
@@ -76,7 +76,12 @@ namespace DiaryApp.Controllers.API
         {
             if (id != person.Id)
             {
-                return BadRequest();
+                return BadRequest("ID mismatch");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
             }
 
             _db.Entry(person).State = EntityState.Modified;

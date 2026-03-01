@@ -97,11 +97,11 @@
               "type": "Microsoft.ApiManagement/service/apis",
               "name": "DiaryAppApiapi/DiaryAppApi",
               "properties": {
-                "displayName": "DiaryAppApi",
+                "displayName": "DiaryApp.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
                 "apiRevision": "1",
                 "description": null,
                 "subscriptionRequired": true,
-                "serviceUrl": null,
+                "serviceUrl": "https://webdiaryapi-cwfsgsetg6h4euaa.canadacentral-01.azurewebsites.net",
                 "path": "",
                 "protocols": [
                   "https"

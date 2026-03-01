@@ -1,4 +1,4 @@
-namespace DiaryApp.Shared.Models;
+﻿namespace DiaryApp.Shared.Models;
 
 public class Payment
 {
@@ -6,7 +6,7 @@ public class Payment
     public int PeoplesId { get; set; }
     public int Ano { get; set; }
     public int Mes { get; set; }
-    public decimal Monto { get; set; }
     public DateTime Fecha { get; set; }
+    public string? ComprobanteUrl { get; set; }  // ✅ Cambiado: era "Monto", ahora es "ComprobanteUrl"
     public Person? Person { get; set; }
 }

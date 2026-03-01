@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DiaryApp.Shared.Models; // ✅ Usar modelo compartido
+using DiaryApp.Shared.Models;
 using DiaryApp.Mobile.Services;
 
 namespace DiaryApp.Mobile.ViewModels;
@@ -41,7 +41,7 @@ public partial class PersonDetailViewModel : BaseViewModel
         if (value > 0)
         {
             IsEditing = true;
-            _ = LoadPersonAsync(value); // ✅ Fire and forget
+            _ = LoadPersonAsync(value);
         }
         else
         {
@@ -64,12 +64,33 @@ public partial class PersonDetailViewModel : BaseViewModel
                 Nombre = person.Nombre;
                 Content = person.Content;
                 Born = person.Born;
-                ImagenUrl = person.ImagenUrl;
+
+                // ✅ Validar si la URL de imagen existe antes de asignarla
+                if (!string.IsNullOrEmpty(person.ImagenUrl))
+                {
+                    // Verificar si es una URL válida
+                    if (Uri.TryCreate(person.ImagenUrl, UriKind.Absolute, out var uri))
+                    {
+                        ImagenUrl = person.ImagenUrl;
+                    }
+                    else
+                    {
+                        // URL inválida, usar imagen por defecto o null
+                        ImagenUrl = null;
+                        System.Diagnostics.Debug.WriteLine($"URL de imagen inválida: {person.ImagenUrl}");
+                    }
+                }
+                else
+                {
+                    ImagenUrl = null;
+                }
+
                 Title = "Editar Persona";
             }
         }
         catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"Error al cargar persona: {ex.Message}");
             await Shell.Current.DisplayAlert("Error", $"No se pudo cargar la persona: {ex.Message}", "OK");
             await Shell.Current.GoToAsync("..");
         }
@@ -144,9 +165,19 @@ public partial class PersonDetailViewModel : BaseViewModel
 
             if (result != null)
             {
+                // Instead of uploading directly to blob storage,
+                // send the image to your API which handles the upload
                 var stream = await result.OpenReadAsync();
-                // Subir a Azure Blob Storage
-                ImagenUrl = await _blobStorageService.UploadImageAsync(stream, result.FileName, "persons");
+                
+                // Option A: Convert to base64 and send in JSON
+                using var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+                var imageBytes = memoryStream.ToArray();
+                var base64Image = Convert.ToBase64String(imageBytes);
+                
+                // Send to API endpoint that handles image upload
+                // This way your API manages Azure Blob Storage
+                ImagenUrl = await _apiService.UploadPersonImageAsync(Id, base64Image, result.FileName);
             }
         }
         catch (Exception ex)
