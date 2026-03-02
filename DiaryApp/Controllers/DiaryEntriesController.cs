@@ -2,7 +2,7 @@
 using DiaryApp.Shared.Models;
 using DiaryApp.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using PagedList.Core; // ✅ Agregar
+using PagedList.Core;
 
 namespace DiaryApp.Controllers
 {
@@ -152,7 +152,7 @@ namespace DiaryApp.Controllers
             int pageSize = 5;
             int pageNumber = page ?? 1;
 
-            // Obtener todas las personas
+            // Obtener todas las personas como IQueryable
             var peoplesQuery = _db.Peoples.AsQueryable();
 
             // Aplicar filtro si se proporciona un término de búsqueda
@@ -161,13 +161,11 @@ namespace DiaryApp.Controllers
                 peoplesQuery = peoplesQuery.Where(p => p.Nombre.Contains(searchString));
             }
 
-            // Ordenar y obtener lista
-            var allPersons = peoplesQuery
-                .OrderBy(p => p.Nombre)
-                .ToList();
+            // Ordenar (mantener como IQueryable)
+            peoplesQuery = peoplesQuery.OrderBy(p => p.Nombre);
 
-            // ✅ Crear PagedList manualmente usando el constructor
-            var pagedList = new PagedList<Person>(allPersons, pageNumber, pageSize);
+            // ✅ Crear PagedList directamente desde IQueryable (NO llamar a ToList antes)
+            var pagedList = new PagedList<Person>(peoplesQuery, pageNumber, pageSize);
 
             // Pasar el término de búsqueda a la vista para mantenerlo en el formulario
             ViewBag.SearchString = searchString;
