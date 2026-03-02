@@ -101,7 +101,7 @@
                 "apiRevision": "1",
                 "description": null,
                 "subscriptionRequired": true,
-                "serviceUrl": "https://dev-diaryapp-c2cuanhkf2f6axee.canadacentral-01.azurewebsites.net",
+                "serviceUrl": "https://webdiaryapi-cwfsgsetg6h4euaa.canadacentral-01.azurewebsites.net",
                 "path": "",
                 "protocols": [
                   "https"

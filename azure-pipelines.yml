@@ -8,8 +8,8 @@ variables:
   buildConfiguration: 'Release'
   publishDir: '$(Build.ArtifactStagingDirectory)/publish'
   packageZip: '$(Build.ArtifactStagingDirectory)/DiaryApp.zip'
-  webAppName: 'prod-DiaryApp'            # <-- define aquí
-  azureServiceConnection: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)' # move service connection here
+  webAppName: 'prod-DiaryApp'
+  azureServiceConnection: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
 
 steps:
   - task: UseDotNet@2
@@ -20,7 +20,7 @@ steps:
 
   - task: NuGetToolInstaller@1
     inputs:
-      versionSpec: '6.x'   # instala NuGet CLI moderno en el agente
+      versionSpec: '6.x'
 
   - task: NuGetCommand@2
     inputs:
@@ -52,6 +52,6 @@ steps:
     displayName: 'Deploy to Azure Web App'
     inputs:
       azureSubscription: '$(azureServiceConnection)'
-      appName: '$(webAppName)'           # <-- use the variable here
+      appName: '$(webAppName)'
       package: '$(packageZip)'
       deploymentMethod: 'zipDeploy'
