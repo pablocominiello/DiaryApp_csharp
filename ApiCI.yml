@@ -1,39 +1,57 @@
 trigger:
-- WebMobile
+- master
 
 pool:
-  vmImage: 'ubuntu-latest'  # O 'windows-latest'
+  vmImage: 'windows-latest'
 
 variables:
   buildConfiguration: 'Release'
+  publishDir: '$(Build.ArtifactStagingDirectory)/publish'
+  packageZip: '$(Build.ArtifactStagingDirectory)/DiaryApp.zip'
+  webAppName: 'prod-DiaryApp'
+  azureServiceConnection: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
 
 steps:
-- task: UseDotNet@2
-  inputs:
-    version: '9.x'
-    
-- task: DotNetCoreCLI@2
-  displayName: 'Restore'
-  inputs:
-    command: 'restore'
-    projects: '**/*.csproj'
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'sdk'
+      version: '9.0.x'
+      includePreviewVersions: true
 
-- task: DotNetCoreCLI@2
-  displayName: 'Build'
-  inputs:
-    command: 'build'
-    projects: '**/*.csproj'
-    arguments: '--configuration $(buildConfiguration)'
+  - task: NuGetToolInstaller@1
+    inputs:
+      versionSpec: '6.x'
 
-- task: DotNetCoreCLI@2
-  displayName: 'Publish'
-  inputs:
-    command: 'publish'
-    publishWebProjects: true
-    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-    zipAfterPublish: true
+  - task: NuGetCommand@2
+    inputs:
+      command: 'restore'
+      restoreSolution: 'DiaryApp.sln'
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'drop'-00"}
+  - task: DotNetCoreCLI@2
+    displayName: 'Publish project'
+    inputs:
+      command: 'publish'
+      projects: 'DiaryApp/DiaryApp.csproj'
+      arguments: '--configuration $(buildConfiguration) --output $(publishDir)'
+      zipAfterPublish: false
+
+  - powershell: |
+      Write-Host "Publish dir contents:"
+      Get-ChildItem -Path "$(publishDir)" -Recurse | Select-Object FullName
+    displayName: 'Inspect publish output'
+
+  - task: ArchiveFiles@2
+    displayName: 'Zip publish output (contents at root)'
+    inputs:
+      rootFolderOrFile: '$(publishDir)'
+      includeRootFolder: false
+      archiveFile: '$(packageZip)'
+      replaceExistingArchive: true
+
+  - task: AzureWebApp@1
+    displayName: 'Deploy to Azure Web App'
+    inputs:
+      azureSubscription: '$(azureServiceConnection)'
+      appName: '$(webAppName)'
+      package: '$(packageZip)'
+      deploymentMethod: 'zipDeploy'
