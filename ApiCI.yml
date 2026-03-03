@@ -29,7 +29,7 @@ steps:
       projects: 'DiaryApp/DiaryApp.csproj'
       arguments: '--configuration $(buildConfiguration) --output $(publishDir) --self-contained false'
       publishWebProjects: false
-      zipAfterPublish: false
+      zipAfterPublish: true
 
   - powershell: |
       Write-Host "=== Content of Publish Directory ==="
