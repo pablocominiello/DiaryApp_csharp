@@ -10,7 +10,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 
-		<ApplicationTitle>DiaryApp.Mobile</ApplicationTitle>
+		<ApplicationTitle>9Julio</ApplicationTitle>
 		<ApplicationId>com.companyname.diaryapp.mobile</ApplicationId>
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
