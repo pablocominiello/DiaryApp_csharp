@@ -3,6 +3,7 @@ using DiaryApp.Core.Interfaces;
 using DiaryApp.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace DiaryApp.Controllers.Api
 {
@@ -12,77 +13,60 @@ namespace DiaryApp.Controllers.Api
     {
         private readonly ApplicationDbContext _db;
         private readonly IBlobStorageService _blobStorageService;
+        private readonly ILogger<PersonsApiController> _logger;
 
-        public PersonsApiController(ApplicationDbContext db, IBlobStorageService blobStorageService)
+        public PersonsApiController(
+            ApplicationDbContext db, 
+            IBlobStorageService blobStorageService,
+            ILogger<PersonsApiController> logger)
         {
             _db = db;
             _blobStorageService = blobStorageService;
+            _logger = logger;
         }
 
         // GET: api/persons
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Person>>> GetAllPersons()
+        public async Task<ActionResult<List<Person>>> GetPersons([FromQuery] string? searchText = null)
         {
-            var persons = await _db.Peoples.ToListAsync();
-            return Ok(persons);
-        }
-
-        // GET: api/persons/{id}
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Person>> GetPerson(int id)
-        {
-            var person = await _db.Peoples.FindAsync(id);
-            
-            if (person == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(person);
-        }
-
-        // POST: api/persons/upload-image
-        [HttpPost("upload-image")]
-        public async Task<IActionResult> UploadImage([FromForm] int? id, [FromForm] IFormFile? imagenFile)
-        {
-            if (imagenFile == null || imagenFile.Length == 0)
-            {
-                return BadRequest(new { message = "No se proporcionó ninguna imagen" });
-            }
-
             try
             {
-                // Subir imagen a Azure Blob Storage
-                using var stream = imagenFile.OpenReadStream();
-                var imageUrl = await _blobStorageService.UploadImageAsync(stream, imagenFile.FileName, "persons");
+                var query = _db.Peoples.AsQueryable();
 
-                // Si se proporcionó un id, actualizar la persona existente
-                if (id.HasValue && id.Value > 0)
+                if (!string.IsNullOrWhiteSpace(searchText))
                 {
-                    var person = await _db.Peoples.FindAsync(id.Value);
-                    if (person == null)
-                    {
-                        return NotFound(new { message = "Persona no encontrada" });
-                    }
-
-                    // Eliminar la imagen anterior si existe
-                    if (!string.IsNullOrEmpty(person.ImagenUrl))
-                    {
-                        await _blobStorageService.DeleteImageAsync(person.ImagenUrl, "persons");
-                    }
-
-                    person.ImagenUrl = imageUrl;
-                    await _db.SaveChangesAsync();
-
-                    return Ok(new { imageUrl, personId = person.Id, message = "Imagen actualizada exitosamente" });
+                    query = query.Where(p => p.Nombre.Contains(searchText));
                 }
 
-                // Si no se proporcionó id, solo devolver la URL de la imagen
-                return Ok(new { imageUrl, message = "Imagen subida exitosamente" });
+                var persons = await query.OrderBy(p => p.Nombre).ToListAsync();
+                return Ok(persons);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = $"Error al subir la imagen: {ex.Message}" });
+                _logger.LogError(ex, "Error getting persons");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        // GET: api/persons/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Person>> GetPerson(int id)
+        {
+            try
+            {
+                var person = await _db.Peoples.FindAsync(id);
+
+                if (person == null)
+                {
+                    return NotFound(new { error = $"Person with ID {id} not found" });
+                }
+
+                return Ok(person);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting person {PersonId}", id);
+                return StatusCode(500, new { error = ex.Message });
             }
         }
 
@@ -90,81 +74,200 @@ namespace DiaryApp.Controllers.Api
         [HttpPost]
         public async Task<ActionResult<Person>> CreatePerson([FromBody] Person person)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                _db.Peoples.Add(person);
+                await _db.SaveChangesAsync();
+
+                return CreatedAtAction(nameof(GetPerson), new { id = person.Id }, person);
             }
-
-            _db.Peoples.Add(person);
-            await _db.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetPerson), new { id = person.Id }, person);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating person");
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
-        // PUT: api/persons/{id}
+        // PUT: api/persons/5
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePerson(int id, [FromBody] Person person)
         {
-            if (id != person.Id)
-            {
-                return BadRequest(new { message = "El ID no coincide" });
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            _db.Entry(person).State = EntityState.Modified;
-
             try
             {
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await PersonExists(id))
+                if (id != person.Id)
                 {
-                    return NotFound();
+                    return BadRequest(new { error = "ID mismatch" });
                 }
-                throw;
-            }
 
-            return NoContent();
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                _db.Entry(person).State = EntityState.Modified;
+
+                try
+                {
+                    await _db.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!await PersonExists(id))
+                    {
+                        return NotFound(new { error = $"Person with ID {id} not found" });
+                    }
+                    throw;
+                }
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating person {PersonId}", id);
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
-        // DELETE: api/persons/{id}
+        // DELETE: api/persons/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePerson(int id)
         {
-            var person = await _db.Peoples.FindAsync(id);
-            if (person == null)
+            try
             {
-                return NotFound();
-            }
+                var person = await _db.Peoples.FindAsync(id);
+                if (person == null)
+                {
+                    return NotFound(new { error = $"Person with ID {id} not found" });
+                }
 
-            // Eliminar imagen de Azure Blob Storage si existe
-            if (!string.IsNullOrEmpty(person.ImagenUrl))
+                // Delete image from Azure Blob Storage
+                if (!string.IsNullOrEmpty(person.ImagenUrl))
+                {
+                    try
+                    {
+                        await _blobStorageService.DeleteImageAsync(person.ImagenUrl, "persons");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to delete image for person {PersonId}", id);
+                        // Continue with deletion even if image deletion fails
+                    }
+                }
+
+                _db.Peoples.Remove(person);
+                await _db.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error deleting person {PersonId}", id);
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        // POST: api/persons/upload-image
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadImage([FromBody] ImageUploadRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("Received upload image request for person {PersonId}", request?.PersonId);
+
+                // Validate request
+                if (request == null)
+                {
+                    _logger.LogWarning("Upload image request is null");
+                    return BadRequest(new { error = "Request cannot be null" });
+                }
+
+                if (string.IsNullOrEmpty(request.Base64Image))
+                {
+                    _logger.LogWarning("Base64 image is empty for person {PersonId}", request.PersonId);
+                    return BadRequest(new { error = "Base64Image cannot be empty" });
+                }
+
+                // Find the person
+                var person = await _db.Peoples.FindAsync(request.PersonId);
+                if (person == null)
+                {
+                    _logger.LogWarning("Person {PersonId} not found", request.PersonId);
+                    return NotFound(new { error = $"Person with ID {request.PersonId} not found" });
+                }
+
+                // Delete old image if exists
+                if (!string.IsNullOrEmpty(person.ImagenUrl))
+                {
+                    try
+                    {
+                        await _blobStorageService.DeleteImageAsync(person.ImagenUrl, "persons");
+                        _logger.LogInformation("Deleted old image for person {PersonId}", request.PersonId);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to delete old image for person {PersonId}", request.PersonId);
+                    }
+                }
+
+                // Convert base64 to stream
+                byte[] imageBytes;
                 try
                 {
-                    await _blobStorageService.DeleteImageAsync(person.ImagenUrl, "persons");
+                    imageBytes = Convert.FromBase64String(request.Base64Image);
+                    _logger.LogInformation("Successfully decoded base64 image, size: {Size} bytes", imageBytes.Length);
                 }
-                catch
+                catch (FormatException ex)
                 {
-                    // Continuar con la eliminación aunque falle eliminar la imagen
+                    _logger.LogError(ex, "Invalid base64 format for person {PersonId}", request.PersonId);
+                    return BadRequest(new { error = "Invalid base64 image format" });
                 }
+
+                using var imageStream = new MemoryStream(imageBytes);
+
+                // Upload to Azure Blob Storage
+                var imageUrl = await _blobStorageService.UploadImageAsync(
+                    imageStream,
+                    request.FileName ?? "image.jpg",
+                    "persons");
+
+                _logger.LogInformation("Uploaded image to blob storage: {ImageUrl}", imageUrl);
+
+                // Update person record
+                person.ImagenUrl = imageUrl;
+                _db.Peoples.Update(person);
+                await _db.SaveChangesAsync();
+
+                _logger.LogInformation("Successfully updated person {PersonId} with new image", request.PersonId);
+
+                return Ok(new { imageUrl });
             }
-
-            _db.Peoples.Remove(person);
-            await _db.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error uploading image for person {PersonId}", request?.PersonId);
+                return StatusCode(500, new { error = $"Error uploading image: {ex.Message}" });
+            }
         }
 
         private async Task<bool> PersonExists(int id)
         {
             return await _db.Peoples.AnyAsync(e => e.Id == id);
         }
+    }
+
+    public class ImageUploadRequest
+    {
+        [JsonPropertyName("personId")]
+        public int PersonId { get; set; }
+
+        [JsonPropertyName("base64Image")]
+        public string Base64Image { get; set; } = string.Empty;
+
+        [JsonPropertyName("fileName")]
+        public string? FileName { get; set; }
     }
 }
