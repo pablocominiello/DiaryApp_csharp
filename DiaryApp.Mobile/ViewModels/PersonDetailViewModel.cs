@@ -29,6 +29,13 @@ public partial class PersonDetailViewModel : BaseViewModel
     [ObservableProperty]
     private bool isEditing;
 
+    // ✅ Nueva propiedad para almacenar la imagen temporalmente
+    [ObservableProperty]
+    private byte[]? pendingImageBytes;
+
+    [ObservableProperty]
+    private string? pendingImageFileName;
+
     public PersonDetailViewModel(IApiService apiService, IBlobStorageService blobStorageService)
     {
         _apiService = apiService;
@@ -131,13 +138,50 @@ public partial class PersonDetailViewModel : BaseViewModel
                 ImagenUrl = ImagenUrl
             };
 
+            // ✅ Flujo diferenciado para crear vs editar
             if (IsEditing)
             {
+                // Editar: Si hay imagen pendiente, subirla primero
+                if (PendingImageBytes != null && !string.IsNullOrEmpty(PendingImageFileName))
+                {
+                    var base64Image = Convert.ToBase64String(PendingImageBytes);
+                    person.ImagenUrl = await _apiService.UploadPersonImageAsync(Id, base64Image, PendingImageFileName);
+                    ImagenUrl = person.ImagenUrl;
+                    PendingImageBytes = null;
+                    PendingImageFileName = null;
+                }
+
                 await _apiService.UpdatePersonAsync(person);
             }
             else
             {
-                await _apiService.CreatePersonAsync(person);
+                // Crear: Primero crear la persona, luego subir la imagen si existe
+                var createdPerson = await _apiService.CreatePersonAsync(person);
+                
+                if (createdPerson != null && createdPerson.Id > 0)
+                {
+                    // Si hay imagen pendiente, subirla ahora que tenemos el ID
+                    if (PendingImageBytes != null && !string.IsNullOrEmpty(PendingImageFileName))
+                    {
+                        try
+                        {
+                            var base64Image = Convert.ToBase64String(PendingImageBytes);
+                            var uploadedUrl = await _apiService.UploadPersonImageAsync(createdPerson.Id, base64Image, PendingImageFileName);
+                            
+                            // Actualizar la persona con la URL de la imagen
+                            createdPerson.ImagenUrl = uploadedUrl;
+                            await _apiService.UpdatePersonAsync(createdPerson);
+                            
+                            PendingImageBytes = null;
+                            PendingImageFileName = null;
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Error al subir imagen: {ex.Message}");
+                            // La persona se creó pero la imagen falló - no es crítico
+                        }
+                    }
+                }
             }
 
             await Shell.Current.DisplayAlert("Éxito", "Persona guardada correctamente", "OK");
@@ -158,6 +202,19 @@ public partial class PersonDetailViewModel : BaseViewModel
     {
         try
         {
+            // ✅ Solicitar permisos explícitamente
+            var status = await Permissions.CheckStatusAsync<Permissions.Media>();
+            if (status != PermissionStatus.Granted)
+            {
+                status = await Permissions.RequestAsync<Permissions.Media>();
+                if (status != PermissionStatus.Granted)
+                {
+                    await Shell.Current.DisplayAlert("Permiso Denegado", 
+                        "No se puede acceder a las fotos sin los permisos necesarios.", "OK");
+                    return;
+                }
+            }
+
             var result = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
             {
                 Title = "Selecciona una foto"
@@ -165,24 +222,45 @@ public partial class PersonDetailViewModel : BaseViewModel
 
             if (result != null)
             {
-                // Instead of uploading directly to blob storage,
-                // send the image to your API which handles the upload
+                // ✅ Guardar imagen temporalmente
                 var stream = await result.OpenReadAsync();
-                
-                // Option A: Convert to base64 and send in JSON
                 using var memoryStream = new MemoryStream();
                 await stream.CopyToAsync(memoryStream);
-                var imageBytes = memoryStream.ToArray();
-                var base64Image = Convert.ToBase64String(imageBytes);
-                
-                // Send to API endpoint that handles image upload
-                // This way your API manages Azure Blob Storage
-                ImagenUrl = await _apiService.UploadPersonImageAsync(Id, base64Image, result.FileName);
+                PendingImageBytes = memoryStream.ToArray();
+                PendingImageFileName = result.FileName;
+
+                // ✅ Mostrar preview local convirtiendo a base64
+                var base64 = Convert.ToBase64String(PendingImageBytes);
+                ImagenUrl = $"data:image/jpeg;base64,{base64}";
+
+                // ✅ Si estamos editando (Id > 0), subir inmediatamente
+                if (IsEditing && Id > 0)
+                {
+                    try
+                    {
+                        IsBusy = true;
+                        var uploadedUrl = await _apiService.UploadPersonImageAsync(Id, base64, result.FileName);
+                        ImagenUrl = uploadedUrl;
+                        PendingImageBytes = null;
+                        PendingImageFileName = null;
+                    }
+                    catch (Exception ex)
+                    {
+                        await Shell.Current.DisplayAlert("Advertencia", 
+                            "La imagen se mostrará pero se subirá al guardar", "OK");
+                        System.Diagnostics.Debug.WriteLine($"Error al subir imagen: {ex.Message}");
+                    }
+                    finally
+                    {
+                        IsBusy = false;
+                    }
+                }
             }
         }
         catch (Exception ex)
         {
             await Shell.Current.DisplayAlert("Error", $"No se pudo cargar la imagen: {ex.Message}", "OK");
+            System.Diagnostics.Debug.WriteLine($"Exception en PickImageAsync: {ex}");
         }
     }
 
