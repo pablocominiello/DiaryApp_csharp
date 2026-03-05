@@ -1,7 +1,5 @@
 trigger:
-  branches:
-    include:
-    - CoreIdentity
+- master
 
 pool:
   vmImage: 'windows-latest'
