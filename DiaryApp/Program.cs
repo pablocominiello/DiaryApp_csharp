@@ -41,9 +41,12 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     // Configuración de usuario
     options.User.RequireUniqueEmail = true;
 
-    // Configuración de inicio de sesión
-    options.SignIn.RequireConfirmedEmail = false; // Cambiar a true en producción
+    // ✅ CAMBIO CRÍTICO: Activar verificación de email
+    options.SignIn.RequireConfirmedEmail = true;
     options.SignIn.RequireConfirmedPhoneNumber = false;
+
+    // ✅ Configuración de tokens de email
+    options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
@@ -60,6 +63,9 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
+
+// ✅ IMPORTANTE: Registrar servicio de email
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 // Registrar el servicio de Azure Blob Storage
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
