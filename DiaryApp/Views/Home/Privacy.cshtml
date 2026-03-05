@@ -3,4 +3,98 @@
 }
 <h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="container mt-4">
+    <p class="lead">Última actualización: @DateTime.Now.ToString("MMMM dd, yyyy")</p>
+
+    <h2>Introducción</h2>
+    <p>
+        Esta aplicación de diario personal ("DiaryApp") es un proyecto educativo desarrollado con fines de aprendizaje. 
+        Nos comprometemos a proteger tu privacidad y tus datos personales.
+    </p>
+
+    <h2>Información que Recopilamos</h2>
+    <p>La aplicación puede recopilar la siguiente información:</p>
+    <ul>
+        <li><strong>Información de cuenta:</strong> Nombre de usuario, correo electrónico y contraseña (encriptada)</li>
+        <li><strong>Entradas de diario:</strong> Texto, fechas y estados de ánimo que ingreses</li>
+        <li><strong>Datos de pago:</strong> Información sobre pagos registrados (sin datos bancarios reales)</li>
+        <li><strong>Información de uso:</strong> Datos sobre cómo utilizas la aplicación</li>
+    </ul>
+
+    <h2>Cómo Usamos tu Información</h2>
+    <p>Utilizamos la información recopilada para:</p>
+    <ul>
+        <li>Proporcionar y mantener la funcionalidad de la aplicación</li>
+        <li>Personalizar tu experiencia de usuario</li>
+        <li>Fines educativos y demostrativos del proyecto</li>
+        <li>Mejorar las características y el rendimiento de la aplicación</li>
+    </ul>
+
+    <h2>Almacenamiento y Seguridad de Datos</h2>
+    <p>
+        Tus datos se almacenan de forma segura utilizando tecnologías modernas de encriptación. 
+        La aplicación utiliza Azure SQL Database para el almacenamiento en la nube y ASP.NET Core Identity 
+        para la gestión segura de cuentas de usuario.
+    </p>
+    <p>
+        <strong>Importante:</strong> Como este es un proyecto educativo, te recomendamos no ingresar 
+        información personal sensible o confidencial real.
+    </p>
+
+    <h2>Compartir Información</h2>
+    <p>
+        <strong>No vendemos, intercambiamos ni transferimos tu información personal a terceros.</strong> 
+        Este es un proyecto de estudiante y los datos se utilizan exclusivamente para fines educativos 
+        y de demostración.
+    </p>
+
+    <h2>Cookies y Tecnologías de Seguimiento</h2>
+    <p>
+        La aplicación utiliza cookies y tecnologías similares para:
+    </p>
+    <ul>
+        <li>Mantener tu sesión activa</li>
+        <li>Recordar tus preferencias</li>
+        <li>Analizar el uso de la aplicación</li>
+    </ul>
+
+    <h2>Tus Derechos</h2>
+    <p>Como usuario, tienes derecho a:</p>
+    <ul>
+        <li>Acceder a tus datos personales</li>
+        <li>Modificar o actualizar tu información</li>
+        <li>Eliminar tu cuenta y todos los datos asociados</li>
+        <li>Exportar tus datos</li>
+    </ul>
+
+    <h2>Proyecto Educativo</h2>
+    <div class="alert alert-info">
+        <strong>Aviso:</strong> Esta aplicación es un proyecto desarrollado con fines educativos 
+        como parte de un programa de estudios. No es una aplicación comercial y se proporciona 
+        "tal cual" sin garantías de ningún tipo.
+    </div>
+
+    <h2>Cambios a esta Política</h2>
+    <p>
+        Podemos actualizar esta política de privacidad ocasionalmente. Te notificaremos sobre 
+        cualquier cambio publicando la nueva política en esta página y actualizando la fecha 
+        de "Última actualización".
+    </p>
+
+    <h2>Contacto</h2>
+    <p>
+        Si tienes preguntas sobre esta política de privacidad, puedes contactarnos a través del 
+        repositorio del proyecto en GitHub: 
+        <a href="https://github.com/pablocominiello/DiaryApp_csharp" target="_blank">
+            DiaryApp_csharp
+        </a>
+    </p>
+
+    <hr class="my-4">
+    <p class="text-muted small">
+        <em>
+            Este proyecto utiliza tecnologías: ASP.NET Core, .NET MAUI, Azure SQL Database, 
+            Entity Framework Core, y ASP.NET Core Identity.
+        </em>
+    </p>
+</div>
