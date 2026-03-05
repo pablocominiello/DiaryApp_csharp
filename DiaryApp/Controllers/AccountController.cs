@@ -56,7 +56,9 @@ namespace DiaryApp.Controllers
             {
                 _logger.LogInformation("Usuario creado exitosamente: {Email}", model.Email);
 
-                // ✅ Generar token de confirmación de email
+                // ✅ NO crear Person aquí, esperar a que complete el perfil después
+
+                // Generar token de confirmación de email
                 var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 var callbackUrl = Url.Action(
                     "ConfirmEmail",

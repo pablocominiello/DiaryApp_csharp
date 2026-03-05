@@ -1,5 +1,6 @@
 ﻿using DiaryApp.Core.Data;
 using DiaryApp.Core.Interfaces;
+using DiaryApp.Middleware; // ✅ Agregar
 using DiaryApp.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -85,6 +86,9 @@ app.UseRouting();
 // ✅ IMPORTANTE: Orden correcto - Authentication ANTES de Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// ✅ Middleware para verificar perfil completo (después de Authorization)
+app.UseProfileCompletion();
 
 app.MapStaticAssets();
 

@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DiaryApp.Core.Data
 {
-    // ✅ Cambiar de DbContext a IdentityDbContext<IdentityUser>
     public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
@@ -18,7 +17,6 @@ namespace DiaryApp.Core.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // ✅ IMPORTANTE: Llamar al método base para configurar Identity
             base.OnModelCreating(modelBuilder);
 
             // Seed data para DiaryEntries
@@ -46,17 +44,6 @@ namespace DiaryApp.Core.Data
                 }
             );
 
-            // Seed data para Person
-            modelBuilder.Entity<Person>().HasData(
-                new Person
-                {
-                    Id = 1,
-                    Nombre = "Pablo Eugenio Cominiello",
-                    Content = "Kili",
-                    Born = new DateTime(1976, 6, 30)
-                }
-            );
-
             // Configurar relación entre Payment y Person
             modelBuilder.Entity<Payment>()
                 .HasOne(p => p.Person)
@@ -69,6 +56,19 @@ namespace DiaryApp.Core.Data
                 .HasIndex(p => new { p.PeoplesId, p.Ano, p.Mes })
                 .IsUnique()
                 .HasDatabaseName("IX_Payments_PeoplesId_Ano_Mes");
+
+            // ✅ Relación 1:1 entre Person y IdentityUser
+            modelBuilder.Entity<Person>()
+                .HasOne<IdentityUser>()
+                .WithOne()
+                .HasForeignKey<Person>(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            // ✅ Índice único para garantizar 1 persona por usuario
+            modelBuilder.Entity<Person>()
+                .HasIndex(p => p.UserId)
+                .IsUnique();
         }
     }
 }

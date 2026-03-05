@@ -2,200 +2,226 @@
 using DiaryApp.Core.Interfaces;
 using DiaryApp.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using PagedList.Core;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace DiaryApp.Controllers
 {
-    [Authorize] // ✅ Solo usuarios autenticados pueden acceder
+    [Authorize]
     public class PersonsController : Controller
     {
         private readonly ApplicationDbContext _db;
         private readonly IBlobStorageService _blobStorageService;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly ILogger<PersonsController> _logger;
 
-        public PersonsController(ApplicationDbContext db, IBlobStorageService blobStorageService)
+        public PersonsController(
+            ApplicationDbContext db, 
+            IBlobStorageService blobStorageService,
+            UserManager<IdentityUser> userManager,
+            ILogger<PersonsController> logger)
         {
             _db = db;
             _blobStorageService = blobStorageService;
+            _userManager = userManager;
+            _logger = logger;
         }
 
-        // GET: PersonsController 
-        public ActionResult Index(string searchString, int? page)
+        // GET: /Persons/CompleteProfile - Primera vez que completa el perfil
+        [HttpGet]
+        [AllowAnonymous] // Permitir aunque no tenga perfil completo
+        public async Task<IActionResult> CompleteProfile()
         {
-            int pageSize = 5;
-            int pageNumber = page ?? 1;
-
-            var peoplesQuery = _db.Peoples.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(searchString))
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            if (string.IsNullOrEmpty(userId))
             {
-                peoplesQuery = peoplesQuery.Where(p => p.Nombre.Contains(searchString));
+                return RedirectToAction("Login", "Account");
             }
 
-            peoplesQuery = peoplesQuery.OrderBy(p => p.Nombre);
+            // Verificar si ya tiene perfil
+            var existingPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+            if (existingPerson != null)
+            {
+                return RedirectToAction("Index");
+            }
 
-            var pagedList = new PagedList<Person>(peoplesQuery, pageNumber, pageSize);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
 
-            ViewBag.SearchString = searchString;
-            return View(pagedList);
+            // Crear un objeto Person prellenado con el email
+            var person = new Person
+            {
+                UserId = userId,
+                Born = DateTime.Now.AddYears(-18)
+            };
+
+            ViewBag.UserEmail = user.Email;
+            ViewBag.IsNewProfile = true;
+            return View("CompleteProfile", person);
         }
 
-        // GET: PersonsController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: PersonsController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: PersonsController/Create
+        // POST: /Persons/CompleteProfile
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create(Person obj, IFormFile? imagenFile)
+        [AllowAnonymous]
+        public async Task<IActionResult> CompleteProfile(Person person, IFormFile? imagenFile)
         {
-            if (obj != null && obj.Nombre.Length < 3)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            if (string.IsNullOrEmpty(userId))
             {
-                ModelState.AddModelError("Nombre", "Nombre muy corto");
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Verificar que el UserId del formulario coincida con el usuario logueado
+            if (person.UserId != userId)
+            {
+                _logger.LogWarning("Intento de crear perfil con UserId diferente al usuario logueado");
+                return Forbid();
+            }
+
+            // Verificar si ya existe un perfil
+            var existingPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+            if (existingPerson != null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            if (person.Nombre.Length < 3)
+            {
+                ModelState.AddModelError("Nombre", "El nombre debe tener al menos 3 caracteres");
             }
 
             if (ModelState.IsValid)
             {
-                // Subir imagen a Azure Blob Storage
-                if (imagenFile != null && imagenFile.Length > 0)
+                try
                 {
-                    try
+                    // Subir imagen si fue proporcionada
+                    if (imagenFile != null && imagenFile.Length > 0)
                     {
                         using var stream = imagenFile.OpenReadStream();
-                        obj.ImagenUrl = await _blobStorageService.UploadImageAsync(stream, imagenFile.FileName, "persons");
+                        person.ImagenUrl = await _blobStorageService.UploadImageAsync(
+                            stream, 
+                            imagenFile.FileName, 
+                            "persons");
                     }
-                    catch (Exception ex)
-                    {
-                        ModelState.AddModelError("", $"Error al subir la imagen: {ex.Message}");
-                        return View(obj);
-                    }
+
+                    _db.Peoples.Add(person);
+                    await _db.SaveChangesAsync();
+                    
+                    _logger.LogInformation("Perfil completado para usuario {UserId}", userId);
+                    
+                    TempData["SuccessMessage"] = "¡Perfil completado exitosamente!";
+                    return RedirectToAction("Index");
                 }
-
-                _db.Peoples.Add(obj);
-                await _db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al completar perfil para usuario {UserId}", userId);
+                    ModelState.AddModelError("", "Error al guardar el perfil. Por favor, intenta de nuevo.");
+                }
             }
 
-            return View(obj);
-        }
-
-        // GET: PersonsController/Edit/5
-        [HttpGet]
-        public ActionResult Edit(int id)
-        {
-            if (id == 0)
-            {
-                return NotFound();
-            }
-
-            Person? person = _db.Peoples.Find(id);
-
-            if (person == null)
-            {
-                return NotFound();
-            }
+            var user = await _userManager.FindByIdAsync(userId);
+            ViewBag.UserEmail = user?.Email;
+            ViewBag.IsNewProfile = true;
             return View(person);
         }
 
-        // POST: PersonsController/Edit/5
+        // GET: /Persons/Index - Ver mi perfil
+        public async Task<IActionResult> Index()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var person = await _db.Peoples
+                .Include(p => p.Payments)
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if (person == null)
+            {
+                return RedirectToAction("CompleteProfile");
+            }
+
+            return View("Profile", person);
+        }
+
+        // GET: /Persons/Edit - Editar mi perfil
+        [HttpGet]
+        public async Task<ActionResult> Edit()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var person = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if (person == null)
+            {
+                return RedirectToAction("CompleteProfile");
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            ViewBag.UserEmail = user?.Email;
+            ViewBag.IsNewProfile = false;
+            return View(person);
+        }
+
+        // POST: /Persons/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit(Person obj, IFormFile? imagenFile)
+        public async Task<ActionResult> Edit(Person person, IFormFile? imagenFile)
         {
-            if (obj != null && obj.Nombre.Length < 3)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            // Validar que el usuario solo edite su propio perfil
+            if (person.UserId != userId)
             {
-                ModelState.AddModelError("Nombre", "Nombre muy corto");
+                return Forbid();
+            }
+
+            if (person.Nombre.Length < 3)
+            {
+                ModelState.AddModelError("Nombre", "El nombre debe tener al menos 3 caracteres");
             }
 
             if (ModelState.IsValid)
             {
-                // Procesar la nueva imagen si fue subida
-                if (imagenFile != null && imagenFile.Length > 0)
+                try
                 {
-                    try
+                    if (imagenFile != null && imagenFile.Length > 0)
                     {
-                        // Eliminar la imagen anterior de Azure Blob Storage
-                        if (!string.IsNullOrEmpty(obj.ImagenUrl))
+                        // Eliminar imagen anterior
+                        if (!string.IsNullOrEmpty(person.ImagenUrl))
                         {
-                            await _blobStorageService.DeleteImageAsync(obj.ImagenUrl, "persons");
+                            await _blobStorageService.DeleteImageAsync(person.ImagenUrl, "persons");
                         }
 
-                        // Subir nueva imagen a Azure Blob Storage
+                        // Subir nueva imagen
                         using var stream = imagenFile.OpenReadStream();
-                        obj.ImagenUrl = await _blobStorageService.UploadImageAsync(stream, imagenFile.FileName, "persons");
+                        person.ImagenUrl = await _blobStorageService.UploadImageAsync(
+                            stream, 
+                            imagenFile.FileName, 
+                            "persons");
                     }
-                    catch (Exception ex)
-                    {
-                        ModelState.AddModelError("", $"Error al actualizar la imagen: {ex.Message}");
-                        return View(obj);
-                    }
+
+                    _db.Peoples.Update(person);
+                    await _db.SaveChangesAsync();
+                    
+                    TempData["SuccessMessage"] = "Perfil actualizado exitosamente";
+                    return RedirectToAction("Index");
                 }
-
-                _db.Peoples.Update(obj);
-                await _db.SaveChangesAsync();
-                return RedirectToAction("Index");
-            }
-
-            // ✅ AGREGADO: Retornar la vista si ModelState no es válido
-            return View(obj);
-        }
-
-        // GET: PersonsController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            if (id == 0)
-            {
-                return NotFound();
-            }
-
-            Person? objperson = _db.Peoples.Find(id);
-
-            if (objperson == null)
-            {
-                return NotFound();
-            }
-            return View(objperson);
-        }
-
-        // POST: PersonsController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Delete(Person obj)
-        {
-            if (obj != null && obj.Nombre.Length < 3)
-            {
-                ModelState.AddModelError("Title", "Titulo muy corto");
-            }
-
-            if (ModelState.IsValid)
-            {
-                // Eliminar imagen de Azure Blob Storage antes de eliminar la persona
-                if (!string.IsNullOrEmpty(obj.ImagenUrl))
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        await _blobStorageService.DeleteImageAsync(obj.ImagenUrl, "persons");
-                    }
-                    catch
-                    {
-                        // Continuar con la eliminación aunque falle eliminar la imagen
-                    }
+                    _logger.LogError(ex, "Error al actualizar perfil para usuario {UserId}", userId);
+                    ModelState.AddModelError("", "Error al actualizar el perfil. Por favor, intenta de nuevo.");
                 }
-
-                _db.Peoples.Remove(obj);
-                await _db.SaveChangesAsync();
-                return RedirectToAction("Index");
             }
 
-            return View(obj);
+            var user = await _userManager.FindByIdAsync(userId);
+            ViewBag.UserEmail = user?.Email;
+            ViewBag.IsNewProfile = false;
+            return View(person);
         }
     }
 }

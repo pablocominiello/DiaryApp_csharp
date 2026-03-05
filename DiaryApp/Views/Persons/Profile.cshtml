@@ -1,0 +1,156 @@
+@model DiaryApp.Shared.Models.Person
+
+@{
+    ViewData["Title"] = "Mi Perfil";
+}
+
+<div class="container mt-4">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    @if (!string.IsNullOrEmpty(Model.ImagenUrl))
+                    {
+                        <img src="@Model.ImagenUrl" alt="@Model.Nombre" class="rounded-circle img-fluid mb-3" style="width: 200px; height: 200px; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center mb-3" style="width: 200px; height: 200px;">
+                            <i class="bi bi-person-fill text-white" style="font-size: 100px;"></i>
+                        </div>
+                    }
+                    
+                    <h3 class="mb-2">@Model.Nombre</h3>
+                    <p class="text-muted mb-3">
+                        <i class="bi bi-envelope"></i> @User.Identity?.Name
+                    </p>
+                    
+                    <div class="d-grid gap-2">
+                        <a asp-action="Edit" class="btn btn-primary">
+                            <i class="bi bi-pencil-square"></i> Editar Perfil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información del Perfil</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong><i class="bi bi-person"></i> Nombre:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            @Model.Nombre
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong><i class="bi bi-calendar"></i> Fecha de Nacimiento:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            @Model.Born.ToString("dd/MM/yyyy")
+                            <small class="text-muted">
+                                (@((DateTime.Now.Year - Model.Born.Year)) años)
+                            </small>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Content))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <strong><i class="bi bi-card-text"></i> Descripción:</strong>
+                            </div>
+                            <div class="col-md-8">
+                                @Model.Content
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong><i class="bi bi-credit-card"></i> Pagos registrados:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            @if (Model.Payments != null && Model.Payments.Any())
+                            {
+                                <span class="badge bg-success">@Model.Payments.Count</span>
+                                <a asp-controller="Payments" asp-action="Index" asp-route-personId="@Model.Id" class="btn btn-sm btn-outline-primary ms-2">
+                                    Ver pagos
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Sin pagos registrados</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.Payments != null && Model.Payments.Any())
+            {
+                <div class="card shadow mt-3">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Últimos Pagos</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Año</th>
+                                        <th>Mes</th>
+                                        <th>Fecha</th>
+                                        <th>Comprobante</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var payment in Model.Payments.OrderByDescending(p => p.Fecha).Take(5))
+                                    {
+                                        <tr>
+                                            <td>@payment.Ano</td>
+                                            <td>@payment.Mes</td>
+                                            <td>@payment.Fecha.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(payment.ComprobanteUrl))
+                                                {
+                                                    <a href="@payment.ComprobanteUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-file-earmark-pdf"></i>
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-2">
+                            <a asp-controller="Payments" asp-action="Index" asp-route-personId="@Model.Id" class="btn btn-primary">
+                                Ver todos los pagos
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
