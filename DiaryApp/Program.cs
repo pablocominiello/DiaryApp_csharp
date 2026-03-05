@@ -1,6 +1,7 @@
 ﻿using DiaryApp.Core.Data;
 using DiaryApp.Core.Interfaces;
 using DiaryApp.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -21,6 +22,45 @@ builder.Services.AddControllers()
 builder.Services.AddDbContext<ApplicationDbContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("defaultConnection")));
 
+// ✅ Configurar ASP.NET Core Identity
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+{
+    // Configuración de contraseñas
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 8;
+    options.Password.RequiredUniqueChars = 1;
+
+    // Configuración de bloqueo de cuenta
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+
+    // Configuración de usuario
+    options.User.RequireUniqueEmail = true;
+
+    // Configuración de inicio de sesión
+    options.SignIn.RequireConfirmedEmail = false; // Cambiar a true en producción
+    options.SignIn.RequireConfirmedPhoneNumber = false;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+
+// ✅ Configurar cookies de autenticación
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromHours(24);
+    options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+});
+
 // Registrar el servicio de Azure Blob Storage
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 
@@ -35,7 +75,11 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+// ✅ IMPORTANTE: Orden correcto - Authentication ANTES de Authorization
+app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapStaticAssets();
 
 // ✅ Mapear controladores API
