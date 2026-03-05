@@ -15,11 +15,6 @@
             Icon="person_icon.png" />
 
         <ShellContent
-            Title="Diario"
-            ContentTemplate="{DataTemplate views:DiaryEntriesPage}"
-            Icon="diary_icon.png" />
-
-        <ShellContent
             Title="Pagos"
             ContentTemplate="{DataTemplate views:PaymentsPage}"
             Icon="payment_icon.png" />

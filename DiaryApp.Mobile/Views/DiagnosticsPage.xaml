@@ -73,7 +73,7 @@
                            FontAttributes="Bold" />
                     
                     <Grid ColumnDefinitions="*,Auto" 
-                          RowDefinitions="Auto,Auto,Auto" 
+                          RowDefinitions="Auto,Auto" 
                           ColumnSpacing="10" 
                           RowSpacing="10">
                         
@@ -88,20 +88,10 @@
                                TextColor="{StaticResource Primary}" />
                         
                         <Label Grid.Row="1" Grid.Column="0" 
-                               Text="📔 Entradas del Diario:" 
-                               FontAttributes="Bold"
-                               VerticalOptions="Center" />
-                        <Label Grid.Row="1" Grid.Column="1" 
-                               Text="{Binding DiaryEntryCount}" 
-                               FontSize="20"
-                               FontAttributes="Bold"
-                               TextColor="{StaticResource Primary}" />
-                        
-                        <Label Grid.Row="2" Grid.Column="0" 
                                Text="💰 Pagos:" 
                                FontAttributes="Bold"
                                VerticalOptions="Center" />
-                        <Label Grid.Row="2" Grid.Column="1" 
+                        <Label Grid.Row="1" Grid.Column="1" 
                                Text="{Binding PaymentCount}" 
                                FontSize="20"
                                FontAttributes="Bold"
