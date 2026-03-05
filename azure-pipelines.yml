@@ -8,31 +8,39 @@ variables:
   buildConfiguration: 'Release'
   publishDir: '$(Build.ArtifactStagingDirectory)/publish'
   packageZip: '$(Build.ArtifactStagingDirectory)/DiaryApp.zip'
-  webAppName: 'prod-DiaryApp'            # <-- define aquí
-  azureServiceConnection: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)' # move service connection here
+  webAppName: 'prod-DiaryApp'
+  azureServiceConnection: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
 
 steps:
   - task: UseDotNet@2
+    displayName: 'Install .NET SDK'
     inputs:
       packageType: 'sdk'
       version: '9.0.x'
       includePreviewVersions: true
 
-  - task: NuGetToolInstaller@1
-    inputs:
-      versionSpec: '6.x'   # instala NuGet CLI moderno en el agente
-
-  - task: NuGetCommand@2
+  - task: DotNetCoreCLI@2
+    displayName: 'Restore Web App dependencies'
     inputs:
       command: 'restore'
-      restoreSolution: 'DiaryApp.sln'
+      projects: |
+        DiaryApp/DiaryApp.csproj
+        DiaryApp.Core/DiaryApp.Core.csproj
+        DiaryApp.Shared/DiaryApp.Shared.csproj
 
   - task: DotNetCoreCLI@2
-    displayName: 'Publish project'
+    displayName: 'Build Web App'
+    inputs:
+      command: 'build'
+      projects: 'DiaryApp/DiaryApp.csproj'
+      arguments: '--configuration $(buildConfiguration) --no-restore'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Publish Web App'
     inputs:
       command: 'publish'
       projects: 'DiaryApp/DiaryApp.csproj'
-      arguments: '--configuration $(buildConfiguration) --output $(publishDir)'
+      arguments: '--configuration $(buildConfiguration) --output $(publishDir) --no-build'
       zipAfterPublish: false
 
   - powershell: |
@@ -41,7 +49,7 @@ steps:
     displayName: 'Inspect publish output'
 
   - task: ArchiveFiles@2
-    displayName: 'Zip publish output (contents at root)'
+    displayName: 'Zip publish output'
     inputs:
       rootFolderOrFile: '$(publishDir)'
       includeRootFolder: false
@@ -52,6 +60,6 @@ steps:
     displayName: 'Deploy to Azure Web App'
     inputs:
       azureSubscription: '$(azureServiceConnection)'
-      appName: '$(webAppName)'           # <-- use the variable here
+      appName: '$(webAppName)'
       package: '$(packageZip)'
       deploymentMethod: 'zipDeploy'

@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="DiaryApp.Mobile.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DiaryApp.Mobile"
+    xmlns:views="clr-namespace:DiaryApp.Mobile.Views"
+    Shell.FlyoutBehavior="Disabled"
+    Title="DiaryApp.Mobile">
+
+    <TabBar>
+        <ShellContent
+            Title="Personas"
+            ContentTemplate="{DataTemplate views:PersonsPage}"
+            Icon="person_icon.png" />
+
+        <ShellContent
+            Title="Pagos"
+            ContentTemplate="{DataTemplate views:PaymentsPage}"
+            Icon="payment_icon.png" />
+        
+        <ShellContent
+            Title="Diagnóstico"
+            ContentTemplate="{DataTemplate views:DiagnosticsPage}"
+            Icon="settings_icon.png" />
+    </TabBar>
+
+</Shell>

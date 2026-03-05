@@ -1,0 +1,93 @@
+@model List<DiaryApp.Models.Payment>
+
+<div class="container">
+    <div class="row pt-4">
+        <div class="col-6">
+            @if (ViewBag.PersonId != null)
+            {
+                <a asp-controller="Payments" asp-action="Create" asp-route-personId="@ViewBag.PersonId" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                    </svg>
+                    Agregar Pago
+                </a>
+                <a asp-controller="Persons" asp-action="Index" class="btn btn-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+                    </svg>
+                    Volver a Personas
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Payments" asp-action="Create" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                    </svg>
+                    Agregar Pago
+                </a>
+            }
+        </div>
+        <div class="col-6 text-end">
+            <h2>
+                Pagos
+                @if (!string.IsNullOrEmpty(ViewBag.PersonName))
+                {
+                    <span class="d-inline-flex align-items-center">
+                        @if (!string.IsNullOrEmpty(ViewBag.PersonImageUrl))
+                        {
+                            <img src="@ViewBag.PersonImageUrl" alt="@ViewBag.PersonName" style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px; margin-left: 10px; margin-right: 5px;" />
+                        }
+                        <small class="text-muted">@ViewBag.PersonName</small>
+                    </span>
+                }
+            </h2>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr class="table-secondary">
+                <th>Persona</th>
+                <th>Año</th>
+                <th>Mes</th>
+                <th>Fecha</th>
+                <th>Comprobante</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var payment in Model)
+            {
+                <tr>
+                    <td>@payment.Person?.Nombre</td>
+                    <td>@payment.Ano</td>
+                    <td>@payment.Mes</td>
+                    <td>@payment.Fecha.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(payment.ComprobanteUrl))
+                        {
+                            <img src="@payment.ComprobanteUrl" alt="Comprobante" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;" />
+                        }
+                        else
+                        {
+                            <span class="text-muted">Sin comprobante</span>
+                        }
+                    </td>
+                    <td>
+                        <a asp-controller="Payments" asp-route-id="@payment.Id" asp-action="Edit" class="btn btn-sm btn-primary">
+                            <i class="bi bi-pencil-square"></i> Edit
+                        </a>
+                        <a asp-controller="Payments" asp-action="Delete" asp-route-id="@payment.Id" class="btn btn-sm btn-danger">
+                            <i class="bi bi-trash3"></i> Delete
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

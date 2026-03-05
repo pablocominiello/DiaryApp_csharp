@@ -1,29 +1,17 @@
-## User-specific files
-*.rsuser
+# User-specific files
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
 
-## User secrets - NO SUBIR A GITHUB
-**/secrets.json
+# Development settings with secrets
 **/appsettings.Development.json
+**/appsettings.Local.json
+**/appsettings.*.json
 
-## Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Ww][Ii][Nn]32/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
+# EXCEPT production template (keep this)
+!**/appsettings.json
+!**/appsettings.Production.json
 
-## Visual Studio cache/options
-.vs/
+# Azure secrets
+*.publishsettings

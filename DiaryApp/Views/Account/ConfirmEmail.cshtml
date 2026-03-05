@@ -1,0 +1,47 @@
+﻿@{
+    ViewData["Title"] = "Confirmar Email";
+    var isSuccess = ViewBag.IsSuccess ?? false;
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header @(isSuccess ? "bg-success" : "bg-danger") text-white">
+                    <h4>
+                        @if (isSuccess)
+                        {
+                            <i class="bi bi-check-circle"></i><text> ✅ Email Confirmado</text>
+                        }
+                        else
+                        {
+                            <i class="bi bi-x-circle"></i><text> ❌ Error de Confirmación</text>
+                        }
+                    </h4>
+                </div>
+                <div class="card-body text-center">
+                    <p class="lead">@ViewBag.StatusMessage</p>
+                    
+                    @if (isSuccess)
+                    {
+                        <hr>
+                        <p>Tu cuenta ha sido activada correctamente.</p>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                        </a>
+                    }
+                    else
+                    {
+                        <hr>
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-secondary">
+                            <i class="bi bi-person-plus"></i> Volver a Registrarme
+                        </a>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-house"></i> Ir al Inicio
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

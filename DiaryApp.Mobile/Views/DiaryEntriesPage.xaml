@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:DiaryApp.Mobile.ViewModels"
+             xmlns:models="clr-namespace:DiaryApp.Mobile.Models"
+             x:Class="DiaryApp.Mobile.Views.DiaryEntriesPage"
+             x:DataType="viewmodels:DiaryEntriesViewModel"
+             Title="{Binding Title}">
+
+    <Grid RowDefinitions="Auto,*" Padding="10">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+            <SearchBar Grid.Column="0" 
+                       Placeholder="Buscar por título..."
+                       Text="{Binding SearchText}"
+                       SearchCommand="{Binding SearchCommand}" />
+
+            <Button Grid.Column="1"
+                    Text="+"
+                    Command="{Binding AddEntryCommand}"
+                    WidthRequest="50"
+                    Margin="10,0,0,0" />
+        </Grid>
+
+        <CollectionView Grid.Row="1" 
+                        ItemsSource="{Binding Entries}"
+                        SelectionMode="None">
+            <CollectionView.EmptyView>
+                <StackLayout Padding="20" VerticalOptions="Center">
+                    <Label Text="No hay entradas de diario registradas"
+                           HorizontalTextAlignment="Center"
+                           TextColor="Gray" />
+                </StackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:DiaryEntry">
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Eliminar"
+                                          BackgroundColor="Red"
+                                          Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:DiaryEntriesViewModel}}, Path=DeleteEntryCommand}"
+                                          CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <Frame Margin="0,5" Padding="10" BorderColor="LightGray">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer 
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:DiaryEntriesViewModel}}, Path=GoToDetailCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
+
+                            <VerticalStackLayout>
+                                <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="16" />
+                                <Label Text="{Binding Content}" TextColor="Gray" FontSize="12" LineBreakMode="TailTruncation" MaxLines="2" />
+                                <Label Text="{Binding DateCreated, StringFormat='{0:dd/MM/yyyy}'}" 
+                                       TextColor="Gray" 
+                                       FontSize="10" 
+                                       Margin="0,5,0,0" />
+                            </VerticalStackLayout>
+                        </Frame>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <ActivityIndicator Grid.Row="1"
+                          IsRunning="{Binding IsBusy}"
+                          IsVisible="{Binding IsBusy}"
+                          Color="Blue"
+                          VerticalOptions="Center"
+                          HorizontalOptions="Center" />
+    </Grid>
+</ContentPage>

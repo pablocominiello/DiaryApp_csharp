@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:DiaryApp.Mobile.ViewModels"
+             x:Class="DiaryApp.Mobile.Views.DiagnosticsPage"
+             x:DataType="viewmodels:DiagnosticsViewModel"
+             Title="{Binding Title}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+            
+            <!-- Header -->
+            <Label Text="Información del Sistema"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,10" />
+
+            <!-- Modo de conexión -->
+            <Frame BorderColor="LightBlue" 
+                   BackgroundColor="AliceBlue" 
+                   Padding="15">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="{Binding ConnectionMode}"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Estado de la API -->
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Estado del API"
+                           FontSize="18"
+                           FontAttributes="Bold" />
+                    
+                    <Label Text="{Binding ApiStatus}"
+                           FontSize="14"
+                           TextColor="Gray" />
+                    
+                    <Label Text="URL del API:"
+                           FontSize="12"
+                           FontAttributes="Bold"
+                           Margin="0,10,0,0" />
+                    
+                    <Label Text="{Binding ApiUrl}"
+                           FontSize="11"
+                           TextColor="Gray"
+                           LineBreakMode="WordWrap" />
+                    
+                    <HorizontalStackLayout Spacing="10" Margin="0,10,0,0">
+                        <Button Text="Copiar URL"
+                                Command="{Binding CopyApiUrlCommand}"
+                                BackgroundColor="{StaticResource Primary}"
+                                TextColor="White"
+                                Padding="15,5" />
+                        
+                        <Button Text="Probar Conexión"
+                                Command="{Binding TestConnectionCommand}"
+                                BackgroundColor="Green"
+                                TextColor="White"
+                                Padding="15,5" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Estadísticas del servidor -->
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Registros en el Servidor"
+                           FontSize="18"
+                           FontAttributes="Bold" />
+                    
+                    <Grid ColumnDefinitions="*,Auto" 
+                          RowDefinitions="Auto,Auto" 
+                          ColumnSpacing="10" 
+                          RowSpacing="10">
+                        
+                        <Label Grid.Row="0" Grid.Column="0" 
+                               Text="👥 Personas:" 
+                               FontAttributes="Bold" 
+                               VerticalOptions="Center" />
+                        <Label Grid.Row="0" Grid.Column="1" 
+                               Text="{Binding PersonCount}" 
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}" />
+                        
+                        <Label Grid.Row="1" Grid.Column="0" 
+                               Text="💰 Pagos:" 
+                               FontAttributes="Bold"
+                               VerticalOptions="Center" />
+                        <Label Grid.Row="1" Grid.Column="1" 
+                               Text="{Binding PaymentCount}" 
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Directorio local -->
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Directorio de Datos Local"
+                           FontSize="18"
+                           FontAttributes="Bold" />
+                    
+                    <Label Text="{Binding AppDataDirectory}"
+                           FontSize="11"
+                           TextColor="Gray"
+                           LineBreakMode="WordWrap" />
+                    
+                    <Label Text="ℹ️ Los datos se almacenan en el servidor, no localmente"
+                           FontSize="10"
+                           TextColor="DarkGray"
+                           FontAttributes="Italic"
+                           Margin="0,5,0,0" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Refresh Button -->
+            <Button Text="🔄 Actualizar Información"
+                    Command="{Binding LoadDatabaseInfoCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    HeightRequest="50"
+                    FontSize="16"
+                    HorizontalOptions="Fill"
+                    Margin="0,10,0,0" />
+
+            <!-- Instrucciones -->
+            <Frame BorderColor="LightGreen" 
+                   BackgroundColor="Honeydew" 
+                   Padding="15">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="ℹ️ Información"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="DarkGreen" />
+                    
+                    <Label TextColor="DarkGreen" 
+                           FontSize="12" 
+                           FontAttributes="Italic"
+                           LineBreakMode="WordWrap">
+                        <Label.Text>
+• Los datos se sincronizan automáticamente con Azure
+• Modo DEBUG usa servidor local (localhost)
+• Modo RELEASE usa servidor en la nube
+• Todos los dispositivos comparten los mismos datos
+                        </Label.Text>
+                    </Label>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                              IsVisible="{Binding IsBusy}"
+                              Color="{StaticResource Primary}"
+                              HeightRequest="50"
+                              Margin="0,20,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

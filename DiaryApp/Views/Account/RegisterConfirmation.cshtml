@@ -1,0 +1,43 @@
+﻿@{
+    ViewData["Title"] = "Confirmación de Registro";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4><i class="bi bi-check-circle"></i> ✅ Registro Exitoso</h4>
+                </div>
+                <div class="card-body">
+                    <h5>¡Bienvenido a DiaryApp - Círculo 9 de Julio!</h5>
+                    <hr>
+                    <p>Se ha enviado un correo de confirmación a:</p>
+                    <p class="text-center"><strong class="text-primary">@ViewBag.Email</strong></p>
+                    
+                    <div class="alert alert-info mt-3">
+                        <h6><strong>📧 Próximos pasos:</strong></h6>
+                        <ol>
+                            <li>Revisa tu bandeja de entrada</li>
+                            <li>Busca un correo de <strong>Círculo 9 de Julio - DiaryApp</strong></li>
+                            <li>Haz clic en el enlace de confirmación</li>
+                            <li>¡Ya podrás iniciar sesión!</li>
+                        </ol>
+                    </div>
+
+                    <div class="alert alert-warning mt-3">
+                        <strong>⚠️ Nota:</strong> Si no ves el correo en tu bandeja principal:
+                        <ul>
+                            <li>Revisa tu carpeta de <strong>SPAM</strong> o correo no deseado</li>
+                            <li>Revisa la carpeta de <strong>Promociones</strong> (Gmail)</li>
+                            <li>Espera unos minutos, el correo puede tardar</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <small class="text-muted">No cierres esta ventana hasta confirmar tu email</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

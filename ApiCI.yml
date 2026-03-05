@@ -8,50 +8,146 @@ variables:
   buildConfiguration: 'Release'
   publishDir: '$(Build.ArtifactStagingDirectory)/publish'
   packageZip: '$(Build.ArtifactStagingDirectory)/DiaryApp.zip'
-  webAppName: 'dev-diaryapp'
+  webAppName: 'dev-DiaryApp'
   azureServiceConnection: 'Suscripción 1(2eabbc77-bdf5-4d85-8f86-0738b59fa7a8)'
 
 steps:
+  - checkout: self
+    displayName: 'Checkout source code'
+    clean: true
+
   - task: UseDotNet@2
+    displayName: 'Install .NET 9 SDK'
     inputs:
       packageType: 'sdk'
       version: '9.0.x'
       includePreviewVersions: true
 
-  - task: NuGetToolInstaller@1
-    inputs:
-      versionSpec: '6.x'
-
-  - task: NuGetCommand@2
-    inputs:
-      command: 'restore'
-      restoreSolution: 'DiaryApp.sln'
+  - script: dotnet --version
+    displayName: 'Verify .NET SDK'
 
   - task: DotNetCoreCLI@2
-    displayName: 'Publish project'
+    displayName: 'Restore DiaryApp dependencies'
+    inputs:
+      command: 'restore'
+      projects: 'DiaryApp/DiaryApp.csproj'
+      feedsToUse: 'select'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Build DiaryApp'
+    inputs:
+      command: 'build'
+      projects: 'DiaryApp/DiaryApp.csproj'
+      arguments: '--configuration $(buildConfiguration) --no-restore'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Publish DiaryApp'
     inputs:
       command: 'publish'
       projects: 'DiaryApp/DiaryApp.csproj'
-      arguments: '--configuration $(buildConfiguration) --output $(publishDir)'
+      arguments: '--configuration $(buildConfiguration) --output $(publishDir) --no-build'
+      publishWebProjects: false
       zipAfterPublish: false
+      modifyOutputPath: false
 
   - powershell: |
-      Write-Host "Publish dir contents:"
-      Get-ChildItem -Path "$(publishDir)" -Recurse | Select-Object FullName
-    displayName: 'Inspect publish output'
+      Write-Host "=== Checking publish structure ==="
+      $publishPath = "$(publishDir)"
+      
+      # First, check if DiaryApp.dll is at root
+      $dllAtRoot = Test-Path (Join-Path $publishPath "DiaryApp.dll")
+      
+      if ($dllAtRoot) {
+        Write-Host "✅ DiaryApp.dll is already at root - no fix needed"
+      } else {
+        Write-Host "⚠️ DiaryApp.dll not at root - searching for it..."
+        
+        # Find DiaryApp.dll in subdirectories
+        $dllInSubdir = Get-ChildItem -Path $publishPath -Recurse -Filter "DiaryApp.dll" | Select-Object -First 1
+        
+        if ($dllInSubdir) {
+          $subDir = $dllInSubdir.Directory.FullName
+          Write-Host "📁 Found in subdirectory: $subDir"
+          Write-Host "🔧 Moving files from subdirectory to root..."
+          
+          # Move files to root (only if not already there)
+          Get-ChildItem -Path $subDir -Recurse -File | ForEach-Object {
+            $relativePath = $_.FullName.Substring($subDir.Length + 1)
+            $targetPath = Join-Path $publishPath $relativePath
+            $targetDir = Split-Path $targetPath -Parent
+            
+            # Create target directory if needed
+            if (!(Test-Path $targetDir)) {
+              New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+            }
+            
+            # Only copy if source and destination are different
+            if ($_.FullName -ne $targetPath) {
+              Copy-Item $_.FullName -Destination $targetPath -Force
+              Write-Host "  Moved: $relativePath"
+            }
+          }
+          
+          # Remove the subdirectory
+          Remove-Item -Path $subDir -Recurse -Force
+          Write-Host "✅ Files moved successfully"
+        } else {
+          Write-Host "❌ ERROR: DiaryApp.dll not found anywhere!"
+          exit 1
+        }
+      }
+      
+      Write-Host "`n=== Final publish structure (top level) ==="
+      Get-ChildItem -Path $publishPath -Depth 0 | 
+        Select-Object @{Name='Type';Expression={if($_.PSIsContainer){'DIR'}else{'FILE'}}}, 
+                      Name,
+                      @{Name='Size';Expression={if(!$_.PSIsContainer){[math]::Round($_.Length/1KB,2).ToString()+'KB'}else{'-'}}} |
+        Format-Table -AutoSize
+      
+      Write-Host "`n=== Critical files check ==="
+      $criticalFiles = @('DiaryApp.dll', 'DiaryApp.deps.json', 'DiaryApp.runtimeconfig.json', 'web.config', 'appsettings.json')
+      foreach ($file in $criticalFiles) {
+        $filePath = Join-Path $publishPath $file
+        if (Test-Path $filePath) {
+          $size = [math]::Round((Get-Item $filePath).Length/1KB, 2)
+          Write-Host "✅ $file ($size KB)"
+        } else {
+          Write-Host "⚠️ $file - NOT FOUND"
+        }
+      }
+      
+      # Final validation
+      $dllPath = Join-Path $publishPath "DiaryApp.dll"
+      if (!(Test-Path $dllPath)) {
+        Write-Host "`n❌ FATAL ERROR: DiaryApp.dll NOT at root after fix"
+        exit 1
+      }
+      
+      Write-Host "`n✅ Publish structure is correct!"
+    displayName: 'Fix and validate publish structure'
 
   - task: ArchiveFiles@2
-    displayName: 'Zip publish output (contents at root)'
+    displayName: 'Create ZIP package'
     inputs:
       rootFolderOrFile: '$(publishDir)'
       includeRootFolder: false
+      archiveType: 'zip'
       archiveFile: '$(packageZip)'
       replaceExistingArchive: true
+      verbose: true
+
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish artifact for download'
+    inputs:
+      targetPath: '$(packageZip)'
+      artifact: 'DiaryApp-Package'
+      publishLocation: 'pipeline'
 
   - task: AzureWebApp@1
-    displayName: 'Deploy to Azure Web App'
+    displayName: 'Deploy to Azure App Service'
     inputs:
       azureSubscription: '$(azureServiceConnection)'
+      appType: 'webApp'
       appName: '$(webAppName)'
       package: '$(packageZip)'
       deploymentMethod: 'zipDeploy'

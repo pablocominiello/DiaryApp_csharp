@@ -1,5 +1,6 @@
-using DiaryApp.Data;
-using DiaryApp.Services;
+﻿using DiaryApp.Core.Data;
+using DiaryApp.Shared.Models; // ✅ Cambiar de DiaryApp.Core.Models
+using DiaryApp.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -8,10 +9,10 @@ namespace DiaryApp.Controllers
 {
     public class PaymentsController : Controller
     {
-        private readonly AplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
         private readonly IBlobStorageService _blobStorageService;
 
-        public PaymentsController(AplicationDbContext db, IBlobStorageService blobStorageService)
+        public PaymentsController(ApplicationDbContext db, IBlobStorageService blobStorageService)
         {
             _db = db;
             _blobStorageService = blobStorageService;
@@ -24,7 +25,7 @@ namespace DiaryApp.Controllers
                 .Include(p => p.Person)
                 .AsQueryable();
 
-            // Filtrar por persona si se proporciona el par�metro
+            // Filtrar por persona si se proporciona el parámetro
             if (personId.HasValue && personId.Value > 0)
             {
                 paymentsQuery = paymentsQuery.Where(p => p.PeoplesId == personId.Value);
@@ -39,7 +40,7 @@ namespace DiaryApp.Controllers
                 }
             }
 
-            List<Models.Payment> paymentList = paymentsQuery
+            List<Payment> paymentList = paymentsQuery
                 .OrderByDescending(p => p.Fecha)
                 .ToList();
 
@@ -52,7 +53,7 @@ namespace DiaryApp.Controllers
             ViewBag.Peoples = new SelectList(_db.Peoples, "Id", "Nombre");
             
             // Crear un modelo con valores por defecto
-            var payment = new Models.Payment
+            var payment = new Payment
             {
                 Ano = 2026,
                 Fecha = DateTime.Now
@@ -70,7 +71,7 @@ namespace DiaryApp.Controllers
         // POST: Payments/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create(DiaryApp.Models.Payment obj, IFormFile? comprobanteFile)
+        public async Task<ActionResult> Create(Payment obj, IFormFile? comprobanteFile)
         {
             // Server-side validation
             if (obj != null && obj.PeoplesId == 0)
@@ -94,7 +95,8 @@ namespace DiaryApp.Controllers
                 {
                     try
                     {
-                        obj.ComprobanteUrl = await _blobStorageService.UploadImageAsync(comprobanteFile, "comprobantes");
+                        using var stream = comprobanteFile.OpenReadStream();
+                        obj.ComprobanteUrl = await _blobStorageService.UploadImageAsync(stream, comprobanteFile.FileName, "comprobantes");
                     }
                     catch (Exception ex)
                     {
@@ -124,7 +126,7 @@ namespace DiaryApp.Controllers
                 return NotFound();
             }
 
-            Models.Payment payment = _db.Payments.Find(id);
+            Payment payment = _db.Payments.Find(id);
 
             if (payment == null)
             {
@@ -139,7 +141,7 @@ namespace DiaryApp.Controllers
         // POST: Payments/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit(DiaryApp.Models.Payment obj, IFormFile? comprobanteFile)
+        public async Task<ActionResult> Edit(Payment obj, IFormFile? comprobanteFile)
         {
             if (obj != null && obj.PeoplesId == 0)
             {
@@ -160,7 +162,8 @@ namespace DiaryApp.Controllers
                         }
 
                         // Subir nuevo comprobante
-                        obj.ComprobanteUrl = await _blobStorageService.UploadImageAsync(comprobanteFile, "comprobantes");
+                        using var stream = comprobanteFile.OpenReadStream();
+                        obj.ComprobanteUrl = await _blobStorageService.UploadImageAsync(stream, comprobanteFile.FileName, "comprobantes");
                     }
                     catch (Exception ex)
                     {
@@ -190,7 +193,7 @@ namespace DiaryApp.Controllers
                 return NotFound();
             }
 
-            Models.Payment payment = _db.Payments.Include(p => p.Person).FirstOrDefault(p => p.Id == id);
+            Payment payment = _db.Payments.Include(p => p.Person).FirstOrDefault(p => p.Id == id);
 
             if (payment == null)
             {
@@ -204,7 +207,7 @@ namespace DiaryApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            Models.Payment payment = _db.Payments.Find(id);
+            Payment payment = _db.Payments.Find(id);
 
             if (payment == null)
             {
@@ -220,7 +223,7 @@ namespace DiaryApp.Controllers
                 }
                 catch
                 {
-                    // Continuar con la eliminaci�n aunque falle eliminar el comprobante
+                    // Continuar con la eliminación aunque falle eliminar el comprobante
                 }
             }
 

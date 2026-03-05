@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:DiaryApp.Mobile.ViewModels"
+             x:Class="DiaryApp.Mobile.Views.PersonDetailPage"
+             x:DataType="viewmodels:PersonDetailViewModel"
+             Title="{Binding Title}">
+
+    <ScrollView Padding="20">
+        <VerticalStackLayout Spacing="15">
+
+            <!-- Image Picker -->
+            <Frame BorderColor="LightGray" Padding="0" HeightRequest="150" CornerRadius="10">
+                <Grid>
+                    <!-- ✅ Mostrar imagen solo si existe, sino mostrar placeholder -->
+                    <Image IsVisible="{Binding ImagenUrl, Converter={StaticResource IsNotNullConverter}}"
+                           Source="{Binding ImagenUrl}" 
+                           Aspect="AspectFill" />
+                    
+                    <!-- ✅ Placeholder cuando no hay imagen -->
+                    <Label IsVisible="{Binding ImagenUrl, Converter={StaticResource IsNullConverter}}"
+                           Text="Sin imagen"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           TextColor="Gray"
+                           FontSize="16" />
+                    
+                    <Button Text="Seleccionar Imagen"
+                            Command="{Binding PickImageCommand}"
+                            VerticalOptions="End"
+                            Margin="10"
+                            BackgroundColor="#512BD4"
+                            TextColor="White"
+                            Opacity="0.9" />
+                </Grid>
+            </Frame>
+
+            <!-- Nombre -->
+            <Label Text="Nombre:" FontAttributes="Bold" />
+            <Entry Text="{Binding Nombre}" 
+                   Placeholder="Ingrese el nombre"
+                   MaxLength="100" />
+
+            <!-- Content -->
+            <Label Text="Observaciones:" FontAttributes="Bold" />
+            <Editor Text="{Binding Content}" 
+                    Placeholder="Ingrese observaciones"
+                    MaxLength="250"
+                    HeightRequest="100"
+                    AutoSize="TextChanges" />
+
+            <!-- Born Date -->
+            <Label Text="Fecha de Nacimiento:" FontAttributes="Bold" />
+            <DatePicker Date="{Binding Born}" 
+                        MaximumDate="{x:Static x:DateTime.Now}" />
+
+            <!-- Buttons -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,20,0,0">
+                <Button Grid.Column="0"
+                        Text="Cancelar"
+                        Command="{Binding CancelCommand}"
+                        BackgroundColor="Gray"
+                        TextColor="White" />
+                
+                <Button Grid.Column="1"
+                        Text="Guardar"
+                        Command="{Binding SaveCommand}"
+                        BackgroundColor="#512BD4"
+                        TextColor="White" />
+            </Grid>
+
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                              IsVisible="{Binding IsBusy}"
+                              Color="#512BD4"
+                              VerticalOptions="Center"
+                              HorizontalOptions="Center" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
