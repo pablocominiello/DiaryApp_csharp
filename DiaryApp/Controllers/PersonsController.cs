@@ -9,6 +9,18 @@ using System.Security.Claims;
 
 namespace DiaryApp.Controllers
 {
+    // Modelo para paginación
+    public class PagedResult<T>
+    {
+        public List<T> Items { get; set; } = new();
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalCount { get; set; }
+        public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
+        public bool HasPreviousPage => PageNumber > 1;
+        public bool HasNextPage => PageNumber < TotalPages;
+    }
+
     [Authorize]
     public class PersonsController : Controller
     {
@@ -31,7 +43,7 @@ namespace DiaryApp.Controllers
 
         // GET: /Persons/CompleteProfile - Primera vez que completa el perfil
         [HttpGet]
-        [AllowAnonymous] // Permitir aunque no tenga perfil completo
+        [AllowAnonymous]
         public async Task<IActionResult> CompleteProfile()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -41,7 +53,6 @@ namespace DiaryApp.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            // Verificar si ya tiene perfil
             var existingPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
             if (existingPerson != null)
             {
@@ -54,7 +65,6 @@ namespace DiaryApp.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            // Crear un objeto Person prellenado con el email
             var person = new Person
             {
                 UserId = userId,
@@ -79,14 +89,12 @@ namespace DiaryApp.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            // Verificar que el UserId del formulario coincida con el usuario logueado
             if (person.UserId != userId)
             {
                 _logger.LogWarning("Intento de crear perfil con UserId diferente al usuario logueado");
                 return Forbid();
             }
 
-            // Verificar si ya existe un perfil
             var existingPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
             if (existingPerson != null)
             {
@@ -102,7 +110,6 @@ namespace DiaryApp.Controllers
             {
                 try
                 {
-                    // Subir imagen si fue proporcionada
                     if (imagenFile != null && imagenFile.Length > 0)
                     {
                         using var stream = imagenFile.OpenReadStream();
@@ -149,6 +156,45 @@ namespace DiaryApp.Controllers
             return View("Profile", person);
         }
 
+        // GET: /Persons/List - Lista todas las personas con paginación y búsqueda
+        [HttpGet]
+        public async Task<IActionResult> List(string? searchString, int? page)
+        {
+            int pageSize = 10;
+            int pageNumber = page ?? 1;
+
+            var peoplesQuery = _db.Peoples.AsQueryable();
+
+            // Filtrar por nombre si se proporciona búsqueda
+            if (!string.IsNullOrWhiteSpace(searchString))
+            {
+                peoplesQuery = peoplesQuery.Where(p => 
+                    p.Nombre.Contains(searchString) || 
+                    p.Content.Contains(searchString));
+            }
+
+            // Obtener el total antes de paginar
+            int totalCount = await peoplesQuery.CountAsync();
+
+            // Ordenar y aplicar paginación
+            var peoples = await peoplesQuery
+                .OrderBy(p => p.Nombre)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var pagedResult = new PagedResult<Person>
+            {
+                Items = peoples,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
+
+            ViewBag.SearchString = searchString;
+            return View(pagedResult);
+        }
+
         // GET: /Persons/Edit - Editar mi perfil
         [HttpGet]
         public async Task<ActionResult> Edit()
@@ -174,7 +220,6 @@ namespace DiaryApp.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             
-            // Validar que el usuario solo edite su propio perfil
             if (person.UserId != userId)
             {
                 return Forbid();
@@ -191,13 +236,11 @@ namespace DiaryApp.Controllers
                 {
                     if (imagenFile != null && imagenFile.Length > 0)
                     {
-                        // Eliminar imagen anterior
                         if (!string.IsNullOrEmpty(person.ImagenUrl))
                         {
                             await _blobStorageService.DeleteImageAsync(person.ImagenUrl, "persons");
                         }
 
-                        // Subir nueva imagen
                         using var stream = imagenFile.OpenReadStream();
                         person.ImagenUrl = await _blobStorageService.UploadImageAsync(
                             stream, 
