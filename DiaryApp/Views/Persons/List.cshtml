@@ -133,13 +133,22 @@
                             }
                         </td>
                         <td class="align-middle">
-                            <a asp-controller="Payments" 
-                               asp-action="Index" 
-                               asp-route-personId="@person.Id" 
-                               class="btn btn-sm btn-success"
-                               title="Ver pagos">
-                                <i class="bi bi-credit-card"></i> Pagos
-                            </a>
+                            <div class="btn-group" role="group">
+                                <a asp-controller="Persons" 
+                                   asp-action="EditPerson" 
+                                   asp-route-id="@person.Id" 
+                                   class="btn btn-sm btn-primary"
+                                   title="Editar persona">
+                                    <i class="bi bi-pencil-square"></i> Editar
+                                </a>
+                                <a asp-controller="Payments" 
+                                   asp-action="Index" 
+                                   asp-route-personId="@person.Id" 
+                                   class="btn btn-sm btn-success"
+                                   title="Ver pagos">
+                                    <i class="bi bi-credit-card"></i> Pagos
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 }
