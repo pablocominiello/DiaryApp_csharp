@@ -57,18 +57,19 @@ namespace DiaryApp.Core.Data
                 .IsUnique()
                 .HasDatabaseName("IX_Payments_PeoplesId_Ano_Mes");
 
-            // ✅ Relación 1:1 entre Person y IdentityUser
+            // ✅ Relación OPCIONAL entre Person y IdentityUser
             modelBuilder.Entity<Person>()
                 .HasOne<IdentityUser>()
                 .WithOne()
                 .HasForeignKey<Person>(p => p.UserId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .IsRequired();
+                .OnDelete(DeleteBehavior.SetNull)  // ✅ Cambio: permitir null al eliminar usuario
+                .IsRequired(false);  // ✅ Cambio: hacer la relación opcional
 
-            // ✅ Índice único para garantizar 1 persona por usuario
+            // ✅ Índice único (pero permitiendo null)
             modelBuilder.Entity<Person>()
                 .HasIndex(p => p.UserId)
-                .IsUnique();
+                .IsUnique()
+                .HasFilter("[UserId] IS NOT NULL");  // ✅ Solo aplicar unicidad cuando UserId no es null
         }
     }
 }

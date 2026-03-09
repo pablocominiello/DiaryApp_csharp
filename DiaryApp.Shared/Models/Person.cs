@@ -23,9 +23,8 @@ public class Person
     [Display(Name = "Foto de Perfil")]
     public string? ImagenUrl { get; set; }
     
-    // ✅ Relación 1:1 con IdentityUser (obligatoria)
-    [Required]
-    public string UserId { get; set; } = string.Empty;
+    // ✅ Relación opcional con IdentityUser (nullable)
+    public string? UserId { get; set; }
     
     public ICollection<Payment>? Payments { get; set; }
 }

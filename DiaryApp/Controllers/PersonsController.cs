@@ -266,5 +266,161 @@ namespace DiaryApp.Controllers
             ViewBag.IsNewProfile = false;
             return View(person);
         }
+
+        // GET: /Persons/Create - Crear persona sin usuario
+        [HttpGet]
+        public IActionResult Create()
+        {
+            var person = new Person
+            {
+                Born = DateTime.Now.AddYears(-18)
+            };
+            return View(person);
+        }
+
+        // POST: /Persons/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(Person person, IFormFile? imagenFile)
+        {
+            // Validar nombre
+            if (person.Nombre.Length < 3)
+            {
+                ModelState.AddModelError("Nombre", "El nombre debe tener al menos 3 caracteres");
+            }
+
+            // Quitar validación de UserId para personas sin usuario
+            ModelState.Remove("UserId");
+            person.UserId = null; // Personas sin usuario
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    if (imagenFile != null && imagenFile.Length > 0)
+                    {
+                        using var stream = imagenFile.OpenReadStream();
+                        person.ImagenUrl = await _blobStorageService.UploadImageAsync(
+                            stream, 
+                            imagenFile.FileName, 
+                            "persons");
+                    }
+
+                    _db.Peoples.Add(person);
+                    await _db.SaveChangesAsync();
+                    
+                    TempData["SuccessMessage"] = "Persona creada exitosamente";
+                    return RedirectToAction("List");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al crear persona");
+                    ModelState.AddModelError("", "Error al guardar la persona. Por favor, intenta de nuevo.");
+                }
+            }
+
+            return View(person);
+        }
+
+        // GET: /Persons/EditPerson/5 - Editar persona específica (con o sin usuario)
+        [HttpGet]
+        public async Task<IActionResult> EditPerson(int id)
+        {
+            var person = await _db.Peoples.FindAsync(id);
+
+            if (person == null)
+            {
+                return NotFound();
+            }
+
+            return View(person);
+        }
+
+        // POST: /Persons/EditPerson/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditPerson(Person person, IFormFile? imagenFile)
+        {
+            if (person.Nombre.Length < 3)
+            {
+                ModelState.AddModelError("Nombre", "El nombre debe tener al menos 3 caracteres");
+            }
+
+            // Quitar validación de UserId
+            ModelState.Remove("UserId");
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    if (imagenFile != null && imagenFile.Length > 0)
+                    {
+                        if (!string.IsNullOrEmpty(person.ImagenUrl))
+                        {
+                            await _blobStorageService.DeleteImageAsync(person.ImagenUrl, "persons");
+                        }
+
+                        using var stream = imagenFile.OpenReadStream();
+                        person.ImagenUrl = await _blobStorageService.UploadImageAsync(
+                            stream, 
+                            imagenFile.FileName, 
+                            "persons");
+                    }
+
+                    _db.Peoples.Update(person);
+                    await _db.SaveChangesAsync();
+                    
+                    TempData["SuccessMessage"] = "Persona actualizada exitosamente";
+                    return RedirectToAction("List");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al actualizar persona {PersonId}", person.Id);
+                    ModelState.AddModelError("", "Error al actualizar la persona. Por favor, intenta de nuevo.");
+                }
+            }
+
+            return View(person);
+        }
+
+        // POST: /Persons/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeletePerson(int id)
+        {
+            try
+            {
+                var person = await _db.Peoples.FindAsync(id);
+                if (person == null)
+                {
+                    return NotFound();
+                }
+
+                // Eliminar imagen si existe
+                if (!string.IsNullOrEmpty(person.ImagenUrl))
+                {
+                    try
+                    {
+                        await _blobStorageService.DeleteImageAsync(person.ImagenUrl, "persons");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Error al eliminar imagen de persona {PersonId}", id);
+                    }
+                }
+
+                _db.Peoples.Remove(person);
+                await _db.SaveChangesAsync();
+                
+                TempData["SuccessMessage"] = "Persona eliminada exitosamente";
+                return RedirectToAction("List");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al eliminar persona {PersonId}", id);
+                TempData["ErrorMessage"] = "Error al eliminar la persona";
+                return RedirectToAction("List");
+            }
+        }
     }
 }
