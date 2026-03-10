@@ -239,6 +239,185 @@ namespace DiaryApp.Controllers
             return View(model);
         }
 
+        // ✅ NUEVO: GET /Account/ForgotPassword
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        // ✅ NUEVO: POST /Account/ForgotPassword
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            
+            // ⚠️ No revelar si el usuario existe o no (seguridad)
+            if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
+            {
+                // Redirigir a confirmación sin revelar si el email existe
+                return RedirectToAction("ForgotPasswordConfirmation");
+            }
+
+            // Generar token de reset
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var callbackUrl = Url.Action(
+                "ResetPassword",
+                "Account",
+                new { token = token, email = model.Email },
+                protocol: Request.Scheme);
+
+            // Enviar email
+            try
+            {
+                await _emailSender.SendEmailAsync(
+                    model.Email,
+                    "Restablecer Contraseña - Círculo 9 de Julio",
+                    $@"
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                            .header {{ background-color: #dc3545; color: white; padding: 20px; text-align: center; }}
+                            .content {{ padding: 20px; background-color: #f9f9f9; }}
+                            .button {{ display: inline-block; padding: 12px 24px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+                            .footer {{ text-align: center; padding: 20px; font-size: 12px; color: #666; }}
+                            .warning {{ background-color: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 15px 0; }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class='container'>
+                            <div class='header'>
+                                <h2>🔐 Restablecer Contraseña</h2>
+                                <p>DiaryApp - Círculo 9 de Julio</p>
+                            </div>
+                            <div class='content'>
+                                <h3>Solicitud de Restablecimiento de Contraseña</h3>
+                                <p>Hemos recibido una solicitud para restablecer tu contraseña. Haz clic en el botón de abajo para crear una nueva contraseña:</p>
+                                <p style='text-align: center;'>
+                                    <a href='{callbackUrl}' class='button'>Restablecer mi Contraseña</a>
+                                </p>
+                                <p style='font-size: 12px; color: #666;'>Si el botón no funciona, copia y pega este enlace en tu navegador:</p>
+                                <p style='word-break: break-all; font-size: 11px; color: #999;'>{callbackUrl}</p>
+                                
+                                <div class='warning'>
+                                    <strong>⚠️ Importante:</strong>
+                                    <ul>
+                                        <li>Este enlace expirará en 1 hora por seguridad</li>
+                                        <li>Si no solicitaste este cambio, ignora este mensaje</li>
+                                        <li>Tu contraseña actual seguirá siendo válida hasta que establezcas una nueva</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class='footer'>
+                                <p>&copy; 2025 Círculo 9 de Julio - DiaryApp</p>
+                                <p style='font-size: 10px; color: #999;'>
+                                    Este es un email automático, por favor no respondas.
+                                </p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                    ");
+
+                _logger.LogInformation("Email de reset de contraseña enviado a {Email}", model.Email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al enviar email de reset a {Email}", model.Email);
+                // Continuar de todos modos por seguridad
+            }
+
+            return RedirectToAction("ForgotPasswordConfirmation");
+        }
+
+        // ✅ NUEVO: GET /Account/ForgotPasswordConfirmation
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+        // ✅ NUEVO: GET /Account/ResetPassword
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPassword(string? token, string? email)
+        {
+            if (token == null || email == null)
+            {
+                ModelState.AddModelError(string.Empty, "El enlace de restablecimiento no es válido.");
+                return View("Error");
+            }
+
+            var model = new ResetPasswordViewModel
+            {
+                Token = token,
+                Email = email
+            };
+
+            return View(model);
+        }
+
+        // ✅ NUEVO: POST /Account/ResetPassword
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // No revelar que el usuario no existe
+                return RedirectToAction("ResetPasswordConfirmation");
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
+            
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("Contraseña restablecida exitosamente para {Email}", model.Email);
+                return RedirectToAction("ResetPasswordConfirmation");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                if (error.Code == "InvalidToken")
+                {
+                    ModelState.AddModelError(string.Empty, "El enlace de restablecimiento ha expirado o no es válido. Solicita uno nuevo.");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+
+            return View(model);
+        }
+
+        // ✅ NUEVO: GET /Account/ResetPasswordConfirmation
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPasswordConfirmation()
+        {
+            return View();
+        }
+
         // POST: /Account/Logout
         [HttpPost]
         [ValidateAntiForgeryToken]
