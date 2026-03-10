@@ -26,5 +26,9 @@ public class Person
     // ✅ Relación opcional con IdentityUser (nullable)
     public string? UserId { get; set; }
     
+    // ✅ NUEVO: Campo para identificar administradores
+    [Display(Name = "Administrador")]
+    public bool Admin { get; set; } = false;
+    
     public ICollection<Payment>? Payments { get; set; }
 }

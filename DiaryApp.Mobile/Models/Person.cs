@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace DiaryApp.Mobile.Models;
 
@@ -16,6 +16,9 @@ public class Person
     public DateTime Born { get; set; }
 
     public string? ImagenUrl { get; set; }
+
+    // ✅ NUEVO: Campo para identificar administradores
+    public bool Admin { get; set; } = false;
 
     public ICollection<Payment>? Payments { get; set; }
 }
