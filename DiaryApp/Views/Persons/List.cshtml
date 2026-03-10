@@ -1,7 +1,9 @@
-@model DiaryApp.Controllers.PagedResult<Person>
+ï»¿@model DiaryApp.Controllers.PagedResult<Person>
 
 @{
     ViewData["Title"] = "Todas las Personas";
+    var isAdmin = (bool)(ViewBag.IsAdmin ?? false);
+    var currentUserPersonId = (int?)(ViewBag.CurrentUserPersonId);
 }
 
 <div class="container">
@@ -21,7 +23,7 @@
         </div>
     </div>
     
-    <!-- Formulario de búsqueda -->
+    <!-- Formulario de bÃºsqueda -->
     <div class="row mt-3 mb-3">
         <div class="col-12">
             <form asp-controller="Persons" asp-action="List" method="get" class="d-flex gap-2">
@@ -33,7 +35,7 @@
                            name="searchString" 
                            value="@ViewBag.SearchString" 
                            class="form-control" 
-                           placeholder="Buscar por nombre o descripción..." />
+                           placeholder="Buscar por nombre o descripciÃ³n..." />
                     <button type="submit" class="btn btn-primary">
                         Buscar
                     </button>
@@ -81,7 +83,7 @@
                         @if (!string.IsNullOrWhiteSpace(ViewBag.SearchString))
                         {
                             <i class="bi bi-exclamation-triangle fs-3"></i>
-                            <p class="mt-2">No se encontraron personas con el término "<strong>@ViewBag.SearchString</strong>"</p>
+                            <p class="mt-2">No se encontraron personas con el tÃ©rmino "<strong>@ViewBag.SearchString</strong>"</p>
                         }
                         else
                         {
@@ -95,6 +97,8 @@
             {
                 @foreach (var person in Model.Items)
                 {
+                    var canViewPayments = isAdmin || person.Id == currentUserPersonId;
+                    
                     <tr>
                         <td>
                             @if (!string.IsNullOrEmpty(person.ImagenUrl))
@@ -114,12 +118,16 @@
                         </td>
                         <td class="align-middle">
                             <strong>@person.Nombre</strong>
+                            @if (person.Admin)
+                            {
+                                <span class="badge bg-danger ms-1">Admin</span>
+                            }
                         </td>
                         <td class="align-middle">
                             @person.Born.ToString("dd/MM/yyyy")
                             <br />
                             <small class="text-muted">
-                                (@((DateTime.Now.Year - person.Born.Year)) años)
+                                (@((DateTime.Now.Year - person.Born.Year)) aÃ±os)
                             </small>
                         </td>
                         <td class="align-middle">
@@ -141,13 +149,18 @@
                                    title="Editar persona">
                                     <i class="bi bi-pencil-square"></i> Editar
                                 </a>
-                                <a asp-controller="Payments" 
-                                   asp-action="Index" 
-                                   asp-route-personId="@person.Id" 
-                                   class="btn btn-sm btn-success"
-                                   title="Ver pagos">
-                                    <i class="bi bi-credit-card"></i> Pagos
-                                </a>
+                                
+                                @* âœ… NUEVO: Mostrar botÃ³n de Pagos solo si es Admin o es su propio registro *@
+                                @if (canViewPayments)
+                                {
+                                    <a asp-controller="Payments" 
+                                       asp-action="Index" 
+                                       asp-route-personId="@person.Id" 
+                                       class="btn btn-sm btn-success"
+                                       title="Ver pagos">
+                                        <i class="bi bi-credit-card"></i> Pagos
+                                    </a>
+                                }
                             </div>
                         </td>
                     </tr>
@@ -157,13 +170,13 @@
     </table>
 </div>
 
-<!-- Paginación Manual -->
+<!-- PaginaciÃ³n Manual -->
 <div class="container">
     <div class="row">
         <div class="col-12">
-            <nav aria-label="Paginación de personas">
+            <nav aria-label="PaginaciÃ³n de personas">
                 <ul class="pagination justify-content-center">
-                    <!-- Primera página -->
+                    <!-- Primera pÃ¡gina -->
                     <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
                         <a class="page-link" asp-controller="Persons" asp-action="List" 
                            asp-route-page="1" 
@@ -181,7 +194,7 @@
                         </a>
                     </li>
 
-                    <!-- Páginas numeradas -->
+                    <!-- PÃ¡ginas numeradas -->
                     @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
                     {
                         <li class="page-item @(i == Model.PageNumber ? "active" : "")">
@@ -202,12 +215,12 @@
                         </a>
                     </li>
 
-                    <!-- Última página -->
+                    <!-- Ãšltima pÃ¡gina -->
                     <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
                         <a class="page-link" asp-controller="Persons" asp-action="List" 
                            asp-route-page="@Model.TotalPages" 
                            asp-route-searchString="@ViewBag.SearchString">
-                            Última
+                            Ãšltima
                         </a>
                     </li>
                 </ul>
@@ -215,7 +228,7 @@
             <div class="text-center mt-2">
                 <small class="text-muted">
                     <i class="bi bi-info-circle"></i>
-                    Página @Model.PageNumber de @Model.TotalPages - 
+                    PÃ¡gina @Model.PageNumber de @Model.TotalPages - 
                     Mostrando @Model.Items.Count de @Model.TotalCount personas
                     @if (!string.IsNullOrWhiteSpace(ViewBag.SearchString))
                     {

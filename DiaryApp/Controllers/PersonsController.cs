@@ -191,7 +191,16 @@ namespace DiaryApp.Controllers
                 TotalCount = totalCount
             };
 
+            // ✅ NUEVO: Obtener el Person del usuario logueado para validar permisos
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUserPerson = await _db.Peoples
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            // Pasar información al ViewBag para usar en la vista
+            ViewBag.CurrentUserPersonId = currentUserPerson?.Id;
+            ViewBag.IsAdmin = currentUserPerson?.Admin ?? false;
             ViewBag.SearchString = searchString;
+
             return View(pagedResult);
         }
 
