@@ -1,4 +1,19 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@inject DiaryApp.Core.Data.ApplicationDbContext Db
+
+@{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var isAdmin = false;
+    
+    if (!string.IsNullOrEmpty(userId))
+    {
+        var person = await Db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+        isAdmin = person?.Admin ?? false;
+    }
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -12,6 +27,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/DiaryApp.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
 <body>
     <header>
@@ -32,20 +48,53 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="PEC">pec beta 0.33</a>
+                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="PEC">
+                                <i class="bi bi-house-door-fill"></i> pec beta 0.33
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-light" asp-area="" asp-controller="Persons" asp-action="index">Personas</a>
+                            <a class="nav-link text-light" asp-area="" asp-controller="Persons" asp-action="index">
+                                <i class="bi bi-people-fill"></i> MiUsuario
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-light" asp-area="" asp-controller="Persons" asp-action="List">
+                                <i class="bi bi-list-ul"></i> Todas las Personas
+                            </a>
+                        </li>
+                        
+                        @* ✅ NUEVO: Mostrar "Pagos" solo si es Admin *@
+                        @if (isAdmin)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-area="" asp-controller="Payments" asp-action="Index">
+                                    <i class="bi bi-credit-card-fill"></i> Pagos
+                                </a>
+                            </li>
+                        }
+                        
+                        <li class="nav-item">
+                            <a class="nav-link text-light" asp-area="" asp-controller="DiaryEntries" asp-action="Index">
+                                <i class="bi bi-journal-text"></i> Diario
+                            </a>
                         </li>
                     </ul>
                     
-                    <!-- ✅ NUEVO: Menú de usuario -->
+                    <!-- ✅ Menú de usuario -->
                     <ul class="navbar-nav ms-auto">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
-                                    👤 @User.Identity.Name
+                                    @if (isAdmin)
+                                    {
+                                        <i class="bi bi-shield-fill-check text-warning"></i>
+                                    }
+                                    else
+                                    {
+                                        <span>👤</span>
+                                    }
+                                    @User.Identity.Name
                                 </a>
                                 <ul class="dropdown-menu">
                                     <li>

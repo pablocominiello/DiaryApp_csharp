@@ -1,0 +1,241 @@
+﻿@model DiaryApp.Controllers.PagedResult<Person>
+
+@{
+    ViewData["Title"] = "Todas las Personas";
+    var isAdmin = (bool)(ViewBag.IsAdmin ?? false);
+    var currentUserPersonId = (int?)(ViewBag.CurrentUserPersonId);
+}
+
+<div class="container">
+    <div class="row pt-4">
+        <div class="col-6">
+            <a asp-controller="Persons" asp-action="Create" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-journal-plus" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 5.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V10a.5.5 0 0 1-1 0V8.5H6a.5.5 0 0 1 0-1h1.5V6a.5.5 0 0 1 .5-.5" />
+                    <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2" />
+                    <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1z" />
+                </svg>
+                Agregar Persona
+            </a>
+        </div>
+        <div class="col-6 text-end">
+            <h2>Todas las Personas</h2>
+        </div>
+    </div>
+    
+    <!-- Formulario de búsqueda -->
+    <div class="row mt-3 mb-3">
+        <div class="col-12">
+            <form asp-controller="Persons" asp-action="List" method="get" class="d-flex gap-2">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" 
+                           name="searchString" 
+                           value="@ViewBag.SearchString" 
+                           class="form-control" 
+                           placeholder="Buscar por nombre o descripción..." />
+                    <button type="submit" class="btn btn-primary">
+                        Buscar
+                    </button>
+                    @if (!string.IsNullOrWhiteSpace(ViewBag.SearchString))
+                    {
+                        <a asp-controller="Persons" asp-action="List" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Limpiar
+                        </a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ViewBag.SearchString))
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Mostrando resultados para: <strong>@ViewBag.SearchString</strong>
+                    (@Model.TotalCount resultado(s) encontrado(s))
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr class="table-secondary">
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Fecha de Nacimiento</th>
+                <th>Observaciones</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Items.Any())
+            {
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        @if (!string.IsNullOrWhiteSpace(ViewBag.SearchString))
+                        {
+                            <i class="bi bi-exclamation-triangle fs-3"></i>
+                            <p class="mt-2">No se encontraron personas con el término "<strong>@ViewBag.SearchString</strong>"</p>
+                        }
+                        else
+                        {
+                            <i class="bi bi-inbox fs-3"></i>
+                            <p class="mt-2">No hay personas registradas</p>
+                        }
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var person in Model.Items)
+                {
+                    var canViewPayments = isAdmin || person.Id == currentUserPersonId;
+                    
+                    <tr>
+                        <td>
+                            @if (!string.IsNullOrEmpty(person.ImagenUrl))
+                            {
+                                <img src="@person.ImagenUrl" 
+                                     alt="@person.Nombre" 
+                                     class="rounded-circle" 
+                                     style="width: 60px; height: 60px; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px;">
+                                    <i class="bi bi-person-fill text-white fs-3"></i>
+                                </div>
+                            }
+                        </td>
+                        <td class="align-middle">
+                            <strong>@person.Nombre</strong>
+                            @if (person.Admin)
+                            {
+                                <span class="badge bg-danger ms-1">Admin</span>
+                            }
+                        </td>
+                        <td class="align-middle">
+                            @person.Born.ToString("dd/MM/yyyy")
+                            <br />
+                            <small class="text-muted">
+                                (@((DateTime.Now.Year - person.Born.Year)) años)
+                            </small>
+                        </td>
+                        <td class="align-middle">
+                            @if (person.Content.Length > 50)
+                            {
+                                <span>@person.Content.Substring(0, 50)...</span>
+                            }
+                            else
+                            {
+                                <span>@person.Content</span>
+                            }
+                        </td>
+                        <td class="align-middle">
+                            <div class="btn-group" role="group">
+                                <a asp-controller="Persons" 
+                                   asp-action="EditPerson" 
+                                   asp-route-id="@person.Id" 
+                                   class="btn btn-sm btn-primary"
+                                   title="Editar persona">
+                                    <i class="bi bi-pencil-square"></i> Editar
+                                </a>
+                                
+                                @* ✅ NUEVO: Mostrar botón de Pagos solo si es Admin o es su propio registro *@
+                                @if (canViewPayments)
+                                {
+                                    <a asp-controller="Payments" 
+                                       asp-action="Index" 
+                                       asp-route-personId="@person.Id" 
+                                       class="btn btn-sm btn-success"
+                                       title="Ver pagos">
+                                        <i class="bi bi-credit-card"></i> Pagos
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Paginación Manual -->
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="Paginación de personas">
+                <ul class="pagination justify-content-center">
+                    <!-- Primera página -->
+                    <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link" asp-controller="Persons" asp-action="List" 
+                           asp-route-page="1" 
+                           asp-route-searchString="@ViewBag.SearchString">
+                            Primera
+                        </a>
+                    </li>
+                    
+                    <!-- Anterior -->
+                    <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link" asp-controller="Persons" asp-action="List" 
+                           asp-route-page="@(Model.PageNumber - 1)" 
+                           asp-route-searchString="@ViewBag.SearchString">
+                            Anterior
+                        </a>
+                    </li>
+
+                    <!-- Páginas numeradas -->
+                    @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                    {
+                        <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                            <a class="page-link" asp-controller="Persons" asp-action="List" 
+                               asp-route-page="@i" 
+                               asp-route-searchString="@ViewBag.SearchString">
+                                @i
+                            </a>
+                        </li>
+                    }
+
+                    <!-- Siguiente -->
+                    <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                        <a class="page-link" asp-controller="Persons" asp-action="List" 
+                           asp-route-page="@(Model.PageNumber + 1)" 
+                           asp-route-searchString="@ViewBag.SearchString">
+                            Siguiente
+                        </a>
+                    </li>
+
+                    <!-- Última página -->
+                    <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                        <a class="page-link" asp-controller="Persons" asp-action="List" 
+                           asp-route-page="@Model.TotalPages" 
+                           asp-route-searchString="@ViewBag.SearchString">
+                            Última
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="text-center mt-2">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i>
+                    Página @Model.PageNumber de @Model.TotalPages - 
+                    Mostrando @Model.Items.Count de @Model.TotalCount personas
+                    @if (!string.IsNullOrWhiteSpace(ViewBag.SearchString))
+                    {
+                        <span>(filtradas por: <strong>@ViewBag.SearchString</strong>)</span>
+                    }
+                </small>
+            </div>
+        </div>
+    </div>
+</div>

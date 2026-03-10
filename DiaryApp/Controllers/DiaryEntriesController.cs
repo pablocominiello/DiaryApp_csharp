@@ -2,7 +2,6 @@
 using DiaryApp.Shared.Models;
 using DiaryApp.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using PagedList.Core; // ✅ Cambiado de PagedList.Core.Mvc
 
 namespace DiaryApp.Controllers
 {
@@ -28,6 +27,7 @@ namespace DiaryApp.Controllers
         {
             return View();
         }
+        
         // GET: DiaryEntriesController1/Create
         public ActionResult Create()
         {
@@ -35,7 +35,7 @@ namespace DiaryApp.Controllers
         }
 
         [HttpPost]
-        // GET: DiaryEntriesController1/Create
+        // POST: DiaryEntriesController1/Create
         public ActionResult Create(DiaryEntry obj)
         {
             // Server-side validation example
@@ -94,9 +94,8 @@ namespace DiaryApp.Controllers
             return View(obj);
         }
 
-
-
         // GET: DiaryEntriesController1/Delete/5
+        [HttpGet]
         public ActionResult Delete(int id)
         {
             if (id == null || id == 0)
@@ -118,20 +117,14 @@ namespace DiaryApp.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Delete(DiaryEntry obj)
         {
-            // Server-side validation example
-            if (obj != null && obj.Title.Length < 3)
+            if (obj == null)
             {
-                ModelState.AddModelError("Title", "Titulo muy corto");
+                return NotFound();
             }
 
-            if (ModelState.IsValid)
-            {
-                _db.DiaryEntries.Remove(obj); // Update entry to database
-                _db.SaveChanges(); // save changes to database
-                return RedirectToAction("index");
-            }
-
-            return View(obj);
+            _db.DiaryEntries.Remove(obj); // Remove entry from database
+            _db.SaveChanges(); // save changes to database
+            return RedirectToAction("index");
         }
     }
 }
