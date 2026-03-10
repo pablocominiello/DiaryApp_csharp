@@ -1,4 +1,19 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@inject DiaryApp.Core.Data.ApplicationDbContext Db
+
+@{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var isAdmin = false;
+    
+    if (!string.IsNullOrEmpty(userId))
+    {
+        var person = await Db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+        isAdmin = person?.Admin ?? false;
+    }
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -47,11 +62,17 @@
                                 <i class="bi bi-list-ul"></i> Todas las Personas
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-light" asp-area="" asp-controller="Payments" asp-action="Index">
-                                <i class="bi bi-credit-card-fill"></i> Pagos
-                            </a>
-                        </li>
+                        
+                        @* ✅ NUEVO: Mostrar "Pagos" solo si es Admin *@
+                        @if (isAdmin)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-area="" asp-controller="Payments" asp-action="Index">
+                                    <i class="bi bi-credit-card-fill"></i> Pagos
+                                </a>
+                            </li>
+                        }
+                        
                         <li class="nav-item">
                             <a class="nav-link text-light" asp-area="" asp-controller="DiaryEntries" asp-action="Index">
                                 <i class="bi bi-journal-text"></i> Diario
@@ -59,13 +80,21 @@
                         </li>
                     </ul>
                     
-                    <!-- ✅ NUEVO: Menú de usuario -->
+                    <!-- ✅ Menú de usuario -->
                     <ul class="navbar-nav ms-auto">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
-                                    👤 @User.Identity.Name
+                                    @if (isAdmin)
+                                    {
+                                        <i class="bi bi-shield-fill-check text-warning"></i>
+                                    }
+                                    else
+                                    {
+                                        <span>👤</span>
+                                    }
+                                    @User.Identity.Name
                                 </a>
                                 <ul class="dropdown-menu">
                                     <li>
