@@ -8,7 +8,8 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">PEC DevOps SurEcosystem</h1>
+    <h1 class="display-4">PEC DevOps SurEcosystem <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Profile">Profile</a></h1>
+
     @if (env.IsDevelopment())
     {
         <p>The application is running in Development environment.</p>
@@ -23,6 +24,9 @@
     {
         <p>The application is running in Production environment.</p>
     }
+    
+    <img src="~/images/9julio/PECdata.png" alt="PEC Data" class="img-fluid mb-3" />
+    
     <iframe src="https://pablocominiello.github.io/pages/PEC.html" width="100%" height="1500" title="PEC content">
         Alternative content for browsers that do not support iframes.
     </iframe>
