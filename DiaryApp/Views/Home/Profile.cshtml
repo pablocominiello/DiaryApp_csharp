@@ -1,0 +1,29 @@
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="container mt-4">
+    <h1 class="display-4 text-center mb-4">Profile</h1>
+    
+    <div class="pdf-viewer">
+        <iframe src="~/images/Portfolio.pdf" 
+                width="100%" 
+                height="800px" 
+                style="border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
+                title="Portfolio PDF">
+            <p>Tu navegador no soporta iframes. 
+               <a href="~/images/Portfolio.pdf" download>Descarga el PDF aquí</a>
+            </p>
+        </iframe>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .pdf-viewer {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+    </style>
+}
