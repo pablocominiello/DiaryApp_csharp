@@ -99,10 +99,10 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseProfileCompletion();
+// ✅ ORDEN CORRECTO:
+app.UseAuthentication();      // 1️⃣ Primero autenticar
+app.UseAuthorization();       // 2️⃣ Luego autorizar
+app.UseProfileCompletion();   // 3️⃣ Por último, verificar perfil
 
 app.MapStaticAssets();
 

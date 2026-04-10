@@ -1,20 +1,20 @@
-using System.ComponentModel.DataAnnotations;
+ï»¿using System.ComponentModel.DataAnnotations;
 
 namespace DiaryApp.Models
 {
     public class LoginViewModel
     {
         [Required(ErrorMessage = "El email es requerido")]
-        [EmailAddress(ErrorMessage = "Email inválido")]
+        [EmailAddress(ErrorMessage = "Email invÃ¡lido")]
         [Display(Name = "Email")]
         public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "La contraseña es requerida")]
+        [Required(ErrorMessage = "La contraseÃ±a es requerida")]
         [DataType(DataType.Password)]
-        [Display(Name = "Contraseña")]
+        [Display(Name = "ContraseÃ±a")]
         public string Password { get; set; } = string.Empty;
 
         [Display(Name = "Recordarme")]
-        public bool RememberMe { get; set; }
+        public bool RememberMe { get; set; } = true; // âœ… Seleccionado por defecto
     }
 }

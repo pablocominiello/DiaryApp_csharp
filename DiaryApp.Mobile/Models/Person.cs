@@ -9,9 +9,9 @@ public class Person
     [Required(ErrorMessage = "Ingrese el Nombre!")]
     public string Nombre { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(250, MinimumLength = 3, ErrorMessage = "Ingrese Contenido entre 3 y 250 caracteres")]
-    public string Content { get; set; } = string.Empty;
+    // ✅ Campo OPCIONAL - Removido [Required]
+    [StringLength(250, ErrorMessage = "La descripción no puede exceder 250 caracteres")]
+    public string? Content { get; set; }
 
     public DateTime Born { get; set; }
 

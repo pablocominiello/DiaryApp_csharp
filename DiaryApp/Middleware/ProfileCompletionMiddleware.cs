@@ -23,45 +23,61 @@ namespace DiaryApp.Middleware
             {
                 var path = context.Request.Path.Value?.ToLower() ?? string.Empty;
 
-                // ✅ Rutas que NO requieren perfil completo
+                // ✅ CORREGIDO: Rutas que NO requieren perfil completo
                 var excludedPaths = new[]
                 {
-                    "/account/logout",
-                    "/account/confirmemail",
-                    "/persons/completeprofile",
-                    "/persons/edit", // ✅ Agregar Edit
-                    "/api/",
-                    "/lib/",
-                    "/css/",
-                    "/js/",
-                    "/images/"
+                    "/account/",                    // ✅ Todas las rutas de Account (Login, Logout, Register, etc.)
+                    "/persons/completeprofile",     // ✅ La página de completar perfil
+                    "/persons/edit",                // ✅ Editar perfil
+                    "/api/",                        // ✅ APIs
+                    "/health",                      // ✅ Health checks de Azure
+                    "/_framework/",                 // ✅ Framework files
+                    "/lib/",                        // ✅ Librerías estáticas
+                    "/css/",                        // ✅ CSS
+                    "/js/",                         // ✅ JavaScript
+                    "/images/",                     // ✅ Imágenes
+                    "/favicon.ico"                  // ✅ Favicon
                 };
 
-                if (!excludedPaths.Any(excluded => path.StartsWith(excluded)))
+                // ✅ Si está en una ruta excluida, permitir el acceso SIN verificar perfil
+                if (excludedPaths.Any(excluded => path.StartsWith(excluded)))
                 {
-                    var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                    
-                    if (!string.IsNullOrEmpty(userId))
+                    await _next(context);
+                    return;
+                }
+
+                var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    try
                     {
                         var user = await userManager.FindByIdAsync(userId);
                         
-                        // Verificar si el email está confirmado
+                        // ✅ Si el email no está confirmado, permitir acceso (Identity lo maneja)
                         if (user != null && !await userManager.IsEmailConfirmedAsync(user))
                         {
-                            // Permitir acceso hasta que confirme el email
                             await _next(context);
                             return;
                         }
 
-                        // Verificar si tiene perfil completo
+                        // ✅ Verificar si tiene perfil completo
                         var hasPerson = await dbContext.Peoples.AnyAsync(p => p.UserId == userId);
 
                         if (!hasPerson)
                         {
-                            _logger.LogInformation("Usuario {UserId} no tiene perfil, redirigiendo a completar perfil", userId);
-                            context.Response.Redirect("/Persons/CompleteProfile");
-                            return;
+                            // ✅ CRÍTICO: Evitar bucle infinito
+                            if (!path.Contains("/persons/completeprofile"))
+                            {
+                                _logger.LogInformation("Usuario {UserId} sin perfil, redirigiendo desde {Path}", userId, path);
+                                context.Response.Redirect("/Persons/CompleteProfile");
+                                return;
+                            }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error en ProfileCompletionMiddleware para usuario {UserId}", userId);
                     }
                 }
             }

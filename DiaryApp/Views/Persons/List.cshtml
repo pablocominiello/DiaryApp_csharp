@@ -131,13 +131,20 @@
                             </small>
                         </td>
                         <td class="align-middle">
-                            @if (person.Content.Length > 50)
+                            @if (!string.IsNullOrEmpty(person.Content))
                             {
-                                <span>@person.Content.Substring(0, 50)...</span>
+                                if (person.Content.Length > 50)
+                                {
+                                    <span>@person.Content.Substring(0, 50)...</span>
+                                }
+                                else
+                                {
+                                    <span>@person.Content</span>
+                                }
                             }
                             else
                             {
-                                <span>@person.Content</span>
+                                <small class="text-muted">(Sin descripción)</small>
                             }
                         </td>
                         <td class="align-middle">
