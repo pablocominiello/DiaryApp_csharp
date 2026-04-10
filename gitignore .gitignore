@@ -1,4 +1,4 @@
-# User-specific files
+﻿# User-specific files
 *.suo
 *.user
 *.userosscache
@@ -15,3 +15,72 @@
 
 # Azure secrets
 *.publishsettings
+
+## ============================================
+## Archivos con datos sensibles - NO COMMITEAR
+## ============================================
+
+# Secrets de Kubernetes (producción)
+k8s-production/secrets.yaml
+k8s-production/*-secrets.yaml
+
+# Secrets de Minikube (desarrollo - OK si password es de prueba)
+# k8s-minikube/secrets.yaml  # ⚠️ Solo descomentar si usas passwords reales
+
+# Configuración local con credenciales
+appsettings.Development.json
+**/appsettings.*.json
+!**/appsettings.json
+
+# User secrets
+**/secrets.json
+
+# Variables de entorno
+.env
+.env.local
+.env.production
+
+# Azure publish profiles
+**/*.pubxml
+**/*.publishsettings
+
+## ============================================
+## Archivos generados automáticamente
+## ============================================
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# macOS
+.DS_Store
