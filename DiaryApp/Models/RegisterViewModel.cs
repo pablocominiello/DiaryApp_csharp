@@ -10,7 +10,7 @@ namespace DiaryApp.Models
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "La contraseña es requerida")]
-        [StringLength(100, ErrorMessage = "La {0} debe tener al menos {2} caracteres.", MinimumLength = 8)]
+        [StringLength(100, ErrorMessage = "La contraseña no puede exceder {1} caracter.", MinimumLength = 1)]
         [DataType(DataType.Password)]
         [Display(Name = "Contraseña")]
         public string Password { get; set; } = string.Empty;
