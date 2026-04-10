@@ -29,12 +29,13 @@ builder.Services.AddHealthChecks()
 // Configurar ASP.NET Core Identity
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
-    options.Password.RequireDigit = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequiredLength = 8;
-    options.Password.RequiredUniqueChars = 1;
+    // ✅ Configuración de contraseña MÁS SIMPLE
+    options.Password.RequireDigit = false;           // ❌ No requiere números
+    options.Password.RequireLowercase = false;       // ❌ No requiere minúsculas
+    options.Password.RequireUppercase = false;       // ❌ No requiere mayúsculas
+    options.Password.RequireNonAlphanumeric = false; // ❌ No requiere caracteres especiales
+    options.Password.RequiredLength = 1;             // ✅ Mínimo 1 carácter (sin restricción práctica)
+    options.Password.RequiredUniqueChars = 1;        // ✅ Al menos 1 carácter único
 
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     options.Lockout.MaxFailedAccessAttempts = 5;
