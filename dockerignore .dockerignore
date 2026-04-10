@@ -1,0 +1,31 @@
+# Directorios de build
+**/bin/
+**/obj/
+**/out/
+
+# Dependencias y paquetes
+**/node_modules/
+**/.nuget/
+
+# Archivos de Visual Studio
+**/.vs/
+**/.vscode/
+*.user
+*.suo
+*.cache
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+**/Dockerfile*
+**/docker-compose*
+**/.dockerignore
+
+# Archivos temporales
+**/*.log
+**/*.md
+**/README.md
+LICENSE

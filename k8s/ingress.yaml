@@ -1,0 +1,36 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: diaryapp-ingress
+  namespace: diaryapp
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: letsencrypt-prod  # SSL automático
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - diaryapp.tudominio.com
+    - api.diaryapp.tudominio.com
+    secretName: diaryapp-tls
+  rules:
+  - host: diaryapp.tudominio.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: webapp-service
+            port:
+              number: 80
+  - host: api.diaryapp.tudominio.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api-service
+            port:
+              number: 80
