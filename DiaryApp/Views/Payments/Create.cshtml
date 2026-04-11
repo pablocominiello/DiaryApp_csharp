@@ -10,11 +10,18 @@
                 <div asp-validation-summary="All" class="text-bg-danger"></div>
                 
                 <div class="card-group">
-                    <label asp-for="PeoplesId" class="form-label"></label>
-                    <select asp-for="PeoplesId" class="form-control" asp-items="ViewBag.Peoples">
+                    <label asp-for="PeoplesId" class="form-label">Persona</label>
+                    <select asp-for="PeoplesId" class="form-control" asp-items="ViewBag.Peoples" disabled>
                         <option value="">-- Seleccione una persona --</option>
                     </select>
+                    <input type="hidden" asp-for="PeoplesId" />
                     <span asp-validation-for="PeoplesId" class="text-bg-danger"></span>
+                </div>
+
+                <div class="card-group">
+                    <label asp-for="Comentary" class="form-label"></label>
+                    <textarea asp-for="Comentary" class="form-control" rows="3" maxlength="255" placeholder="Ingrese un comentario opcional..."></textarea>
+                    <span asp-validation-for="Comentary" class="text-bg-danger"></span>
                 </div>
 
                 <div class="card-group">
