@@ -126,9 +126,7 @@
                         <td class="align-middle">
                             @person.Born.ToString("dd/MM/yyyy")
                             <br />
-                            <small class="text-muted">
-                                (@((DateTime.Now.Year - person.Born.Year)) años)
-                            </small>
+
                         </td>
                         <td class="align-middle">
                             @if (!string.IsNullOrEmpty(person.Content))

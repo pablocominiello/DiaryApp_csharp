@@ -6,11 +6,12 @@
 @{
     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
     var isAdmin = false;
+    Person? currentPerson = null;
     
     if (!string.IsNullOrEmpty(userId))
     {
-        var person = await Db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
-        isAdmin = person?.Admin ?? false;
+        currentPerson = await Db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+        isAdmin = currentPerson?.Admin ?? false;
     }
 }
 
@@ -87,16 +88,26 @@
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
-                                    @if (isAdmin)
+                                <a class="nav-link dropdown-toggle text-light d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                                    @if (!string.IsNullOrEmpty(currentPerson?.ImagenUrl))
                                     {
-                                        <i class="bi bi-shield-fill-check text-warning"></i>
+                                        <img src="@currentPerson.ImagenUrl" 
+                                             alt="@User.Identity.Name" 
+                                             class="rounded-circle me-2" 
+                                             style="width: 32px; height: 32px; object-fit: cover; border: 2px solid white;" />
                                     }
                                     else
                                     {
-                                        <span>👤</span>
+                                        <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center me-2" 
+                                             style="width: 32px; height: 32px; border: 2px solid white;">
+                                            <i class="bi bi-person-fill text-white"></i>
+                                        </div>
                                     }
-                                    @User.Identity.Name
+                                    @if (isAdmin)
+                                    {
+                                        <i class="bi bi-shield-fill-check text-warning me-1"></i>
+                                    }
+                                    <span>@User.Identity.Name</span>
                                 </a>
                                 <ul class="dropdown-menu">
                                     <li>

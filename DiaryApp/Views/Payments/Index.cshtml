@@ -53,6 +53,7 @@
         <thead>
             <tr class="table-secondary">
                 <th>Persona</th>
+                <th>Monto</th>
                 <th>Comentario</th>
                 <th>Año</th>
                 <th>Mes</th>
@@ -66,6 +67,7 @@
             {
                 <tr>
                     <td>@payment.Person?.Nombre</td>
+                    <td><strong>@payment.Amount.ToString("C")</strong></td>
                     <td>
                         @if (!string.IsNullOrEmpty(payment.Comentary))
                         {
