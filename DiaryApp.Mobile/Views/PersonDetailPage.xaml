@@ -12,19 +12,19 @@
             <!-- Image Picker -->
             <Frame BorderColor="LightGray" Padding="0" HeightRequest="150" CornerRadius="10">
                 <Grid>
-                    <!-- ✅ Mostrar imagen solo si existe, sino mostrar placeholder -->
+                    <!-- Mostrar imagen solo si existe, sino mostrar placeholder -->
                     <Image IsVisible="{Binding ImagenUrl, Converter={StaticResource IsNotNullConverter}}"
                            Source="{Binding ImagenUrl}" 
                            Aspect="AspectFill" />
-                    
-                    <!-- ✅ Placeholder cuando no hay imagen -->
+
+                    <!-- Placeholder cuando no hay imagen -->
                     <Label IsVisible="{Binding ImagenUrl, Converter={StaticResource IsNullConverter}}"
                            Text="Sin imagen"
                            HorizontalOptions="Center"
                            VerticalOptions="Center"
                            TextColor="Gray"
                            FontSize="16" />
-                    
+
                     <Button Text="Seleccionar Imagen"
                             Command="{Binding PickImageCommand}"
                             VerticalOptions="End"
@@ -61,7 +61,7 @@
                         Command="{Binding CancelCommand}"
                         BackgroundColor="Gray"
                         TextColor="White" />
-                
+
                 <Button Grid.Column="1"
                         Text="Guardar"
                         Command="{Binding SaveCommand}"

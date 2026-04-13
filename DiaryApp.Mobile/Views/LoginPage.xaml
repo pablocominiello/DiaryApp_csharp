@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:DiaryApp.Mobile.ViewModels"
+             x:Class="DiaryApp.Mobile.Views.LoginPage"
+             x:DataType="viewmodels:LoginViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource Primary}">
+
+    <ScrollView>
+        <Grid RowDefinitions="*,Auto,*" Padding="20">
+
+            <!-- Logo y Titulo -->
+            <VerticalStackLayout Grid.Row="0" 
+                               VerticalOptions="End" 
+                               Spacing="20">
+                <Image Source="dotnet_bot.png" 
+                       HeightRequest="120" 
+                       WidthRequest="120" 
+                       HorizontalOptions="Center"/>
+
+                <Label Text="DiaryApp" 
+                       FontSize="32" 
+                       FontAttributes="Bold" 
+                       TextColor="White" 
+                       HorizontalOptions="Center"/>
+
+                <Label Text="Circulo 9 de Julio" 
+                       FontSize="18" 
+                       TextColor="White" 
+                       Opacity="0.8" 
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+
+            <!-- Formulario de Login -->
+            <VerticalStackLayout Grid.Row="1" 
+                               Spacing="15"
+                               Padding="20"
+                               BackgroundColor="White"
+                               Margin="0,20,0,20">
+
+                <Label Text="Iniciar Sesion" 
+                       FontSize="24" 
+                       FontAttributes="Bold" 
+                       TextColor="{StaticResource Primary}"
+                       HorizontalOptions="Center"
+                       Margin="0,0,0,20"/>
+
+                <!-- Email -->
+                <Label Text="Email" 
+                       TextColor="{StaticResource Primary}"/>
+                <Entry Text="{Binding Email}"
+                       Placeholder="tu@email.com"
+                       Keyboard="Email"
+                       ClearButtonVisibility="WhileEditing"
+                       IsEnabled="{Binding IsNotBusy}"/>
+
+                <!-- Password -->
+                <Label Text="Contrasena" 
+                       TextColor="{StaticResource Primary}"/>
+                <Entry Text="{Binding Password}"
+                       Placeholder="Contrasena"
+                       IsPassword="True"
+                       ClearButtonVisibility="WhileEditing"
+                       IsEnabled="{Binding IsNotBusy}"/>
+
+                <!-- Error Message -->
+                <Label Text="{Binding ErrorMessage}"
+                       TextColor="Red"
+                       IsVisible="{Binding HasError}"
+                       Margin="0,10,0,0"/>
+
+                <!-- Login Button -->
+                <Button Text="Iniciar Sesion"
+                        Command="{Binding LoginCommand}"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White"
+                        FontAttributes="Bold"
+                        HeightRequest="50"
+                        CornerRadius="25"
+                        Margin="0,20,0,0"
+                        IsEnabled="{Binding IsNotBusy}"/>
+
+                <!-- Activity Indicator -->
+                <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                 Color="{StaticResource Primary}"
+                                 HorizontalOptions="Center"
+                                 Margin="0,10,0,0"/>
+            </VerticalStackLayout>
+
+            <!-- Footer -->
+            <Label Grid.Row="2" 
+                   Text="v1.0.0 - Proyecto Educativo" 
+                   TextColor="White" 
+                   Opacity="0.6" 
+                   FontSize="12" 
+                   VerticalOptions="End" 
+                   HorizontalOptions="Center"/>
+        </Grid>
+    </ScrollView>
+</ContentPage>

@@ -66,6 +66,9 @@
 		<MauiXaml Update="Views\DiagnosticsPage.xaml">
 			<SubType>Designer</SubType>
 		</MauiXaml>
+		<MauiXaml Update="Views\LoginPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 	</ItemGroup>
 
 	<!-- Referencia al proyecto compartido -->

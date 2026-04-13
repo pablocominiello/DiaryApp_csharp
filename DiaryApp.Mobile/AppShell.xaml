@@ -3,26 +3,41 @@
     x:Class="DiaryApp.Mobile.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:DiaryApp.Mobile"
-    xmlns:views="clr-namespace:DiaryApp.Mobile.Views"
+    xmlns:local="clr-namespace:DiaryApp.Mobile.Views"
     Shell.FlyoutBehavior="Disabled"
-    Title="DiaryApp.Mobile">
+    CurrentItem="{x:Reference loginPage}">
 
-    <TabBar>
+    <!-- Login Page (sin tabs) -->
+    <ShellContent
+        x:Name="loginPage"
+        Route="login"
+        ContentTemplate="{DataTemplate local:LoginPage}" />
+
+    <!-- Main App (con tabs) -->
+    <TabBar Route="main">
         <ShellContent
             Title="Personas"
-            ContentTemplate="{DataTemplate views:PersonsPage}"
-            Icon="person_icon.png" />
-
+            ContentTemplate="{DataTemplate local:PersonsPage}"
+            Route="persons"
+            Icon="{FontImage Glyph='👥', FontFamily='SegoeFluent', Color=White}" />
+        
+        <ShellContent
+            Title="Diario"
+            ContentTemplate="{DataTemplate local:DiaryEntriesPage}"
+            Route="diary"
+            Icon="{FontImage Glyph='📔', FontFamily='SegoeFluent', Color=White}" />
+        
         <ShellContent
             Title="Pagos"
-            ContentTemplate="{DataTemplate views:PaymentsPage}"
-            Icon="payment_icon.png" />
+            ContentTemplate="{DataTemplate local:PaymentsPage}"
+            Route="payments"
+            Icon="{FontImage Glyph='💳', FontFamily='SegoeFluent', Color=White}" />
         
         <ShellContent
             Title="Diagnóstico"
-            ContentTemplate="{DataTemplate views:DiagnosticsPage}"
-            Icon="settings_icon.png" />
+            ContentTemplate="{DataTemplate local:DiagnosticsPage}"
+            Route="diagnostics"
+            Icon="{FontImage Glyph='🔧', FontFamily='SegoeFluent', Color=White}" />
     </TabBar>
 
 </Shell>
