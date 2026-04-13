@@ -22,12 +22,6 @@
             Icon="{FontImage Glyph='👥', FontFamily='SegoeFluent', Color=White}" />
         
         <ShellContent
-            Title="Diario"
-            ContentTemplate="{DataTemplate local:DiaryEntriesPage}"
-            Route="diary"
-            Icon="{FontImage Glyph='📔', FontFamily='SegoeFluent', Color=White}" />
-        
-        <ShellContent
             Title="Pagos"
             ContentTemplate="{DataTemplate local:PaymentsPage}"
             Route="payments"

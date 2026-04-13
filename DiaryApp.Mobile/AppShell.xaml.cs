@@ -12,15 +12,16 @@ public partial class AppShell : Shell
 		try
 		{
 			Routing.RegisterRoute(nameof(PersonDetailPage), typeof(PersonDetailPage));
-			Routing.RegisterRoute(nameof(DiaryEntryDetailPage), typeof(DiaryEntryDetailPage));
+			// COMENTADO: DiaryEntries eliminado del menú
+			// Routing.RegisterRoute(nameof(DiaryEntryDetailPage), typeof(DiaryEntryDetailPage));
 			Routing.RegisterRoute(nameof(PaymentDetailPage), typeof(PaymentDetailPage));
 			Routing.RegisterRoute(nameof(DiagnosticsPage), typeof(DiagnosticsPage));
 			
-			System.Diagnostics.Debug.WriteLine("✅ All routes registered successfully");
+			System.Diagnostics.Debug.WriteLine("All routes registered successfully");
 		}
 		catch (Exception ex)
 		{
-			System.Diagnostics.Debug.WriteLine($"❌ Route registration error: {ex.Message}");
+			System.Diagnostics.Debug.WriteLine($"Route registration error: {ex.Message}");
 		}
 	}
 }

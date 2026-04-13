@@ -31,7 +31,13 @@ public partial class App : Application
     {
         base.OnStart();
         
-        // Verificar autenticación cuando la app inicia (Shell ya está disponible aquí)
+        // En DEBUG, limpiar sesión cada vez que inicia (para pruebas)
+#if DEBUG
+        await _authService.LogoutAsync();
+        System.Diagnostics.Debug.WriteLine("DEBUG: Sesión limpiada automáticamente");
+#endif
+        
+        // Verificar autenticación cuando la app inicia
         await CheckAuthenticationAsync();
     }
 
@@ -44,14 +50,18 @@ public partial class App : Application
 
             var isAuthenticated = await _authService.IsAuthenticatedAsync();
             
+            System.Diagnostics.Debug.WriteLine($"IsAuthenticated: {isAuthenticated}");
+            
             if (isAuthenticated)
             {
                 // Usuario ya tiene sesión activa
+                System.Diagnostics.Debug.WriteLine("Navegando a /persons");
                 await Shell.Current.GoToAsync("///persons");
             }
             else
             {
                 // Usuario no autenticado, ir a login
+                System.Diagnostics.Debug.WriteLine("Navegando a /login");
                 await Shell.Current.GoToAsync("///login");
             }
         }
@@ -64,10 +74,9 @@ public partial class App : Application
             {
                 await Shell.Current.GoToAsync("///login");
             }
-            catch
+            catch (Exception navEx)
             {
-                // Si Shell aún no está disponible, no hacer nada
-                System.Diagnostics.Debug.WriteLine("Shell.Current no disponible todavía");
+                System.Diagnostics.Debug.WriteLine($"Navigation error: {navEx.Message}");
             }
         }
     }

@@ -59,8 +59,9 @@ public static class MauiProgram
 		builder.Services.AddTransient<LoginViewModel>();
 		builder.Services.AddTransient<PersonsViewModel>();
 		builder.Services.AddTransient<PersonDetailViewModel>();
-		builder.Services.AddTransient<DiaryEntriesViewModel>();
-		builder.Services.AddTransient<DiaryEntryDetailViewModel>();
+		// COMENTADO: DiaryEntries eliminado del menú
+		// builder.Services.AddTransient<DiaryEntriesViewModel>();
+		// builder.Services.AddTransient<DiaryEntryDetailViewModel>();
 		builder.Services.AddTransient<PaymentsViewModel>();
 		builder.Services.AddTransient<PaymentDetailViewModel>();
 		builder.Services.AddTransient<DiagnosticsViewModel>();
@@ -69,8 +70,9 @@ public static class MauiProgram
 		builder.Services.AddTransient<LoginPage>();
 		builder.Services.AddTransient<PersonsPage>();
 		builder.Services.AddTransient<PersonDetailPage>();
-		builder.Services.AddTransient<DiaryEntriesPage>();
-		builder.Services.AddTransient<DiaryEntryDetailPage>();
+		// COMENTADO: DiaryEntries eliminado del menú
+		// builder.Services.AddTransient<DiaryEntriesPage>();
+		// builder.Services.AddTransient<DiaryEntryDetailPage>();
 		builder.Services.AddTransient<PaymentsPage>();
 		builder.Services.AddTransient<PaymentDetailPage>();
 		builder.Services.AddTransient<DiagnosticsPage>();

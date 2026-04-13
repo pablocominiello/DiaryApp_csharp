@@ -1,31 +1,25 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DiaryApp.Mobile.Models;
 using DiaryApp.Mobile.Services;
+using DiaryApp.Shared.Models;
 using System.Collections.ObjectModel;
 
 namespace DiaryApp.Mobile.ViewModels;
 
-[QueryProperty(nameof(PersonId), nameof(PersonId))]
 public partial class PaymentsViewModel : BaseViewModel
 {
-    private readonly IDatabaseService _databaseService;
-
-    [ObservableProperty]
-    private int? personId;
+    private readonly IApiService _apiService; // ✅ Cambiar de IDatabaseService
 
     [ObservableProperty]
     private ObservableCollection<Payment> payments = [];
 
-    public PaymentsViewModel(IDatabaseService databaseService)
-    {
-        _databaseService = databaseService;
-        Title = "Pagos";
-    }
+    [ObservableProperty]
+    private int? selectedPersonId;
 
-    partial void OnPersonIdChanged(int? value)
+    public PaymentsViewModel(IApiService apiService) // ✅ Cambiar parámetro
     {
-        LoadPaymentsAsync().ConfigureAwait(false);
+        _apiService = apiService;
+        Title = "Pagos";
     }
 
     [RelayCommand]
@@ -37,7 +31,7 @@ public partial class PaymentsViewModel : BaseViewModel
         try
         {
             IsBusy = true;
-            var items = await _databaseService.GetPaymentsAsync(PersonId);
+            var items = await _apiService.GetPaymentsAsync(SelectedPersonId); // ✅ Usar API
             Payments.Clear();
             foreach (var item in items)
             {
@@ -46,7 +40,7 @@ public partial class PaymentsViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Error", $"Error: {ex.Message}", "OK");
+            await Shell.Current.DisplayAlert("Error", $"Error loading payments: {ex.Message}", "OK");
         }
         finally
         {
@@ -57,22 +51,44 @@ public partial class PaymentsViewModel : BaseViewModel
     [RelayCommand]
     private async Task AddPaymentAsync()
     {
-        var route = PersonId.HasValue 
-            ? $"{nameof(Views.PaymentDetailPage)}?PersonId={PersonId}" 
-            : nameof(Views.PaymentDetailPage);
-        await Shell.Current.GoToAsync(route);
+        await Shell.Current.GoToAsync(nameof(Views.PaymentDetailPage));
+    }
+
+    [RelayCommand]
+    private async Task GoToDetailAsync(Payment payment)
+    {
+        if (payment == null)
+            return;
+
+        await Shell.Current.GoToAsync($"{nameof(Views.PaymentDetailPage)}?Id={payment.Id}");
     }
 
     [RelayCommand]
     private async Task DeletePaymentAsync(Payment payment)
     {
-        var confirm = await Shell.Current.DisplayAlert("Confirmar", 
-            "�Eliminar este pago?", "S�", "No");
-        
+        if (payment == null)
+            return;
+
+        var confirm = await Shell.Current.DisplayAlert("Confirmar",
+            $"¿Eliminar pago?", "Sí", "No");
+
         if (confirm)
         {
-            await _databaseService.DeletePaymentAsync(payment);
-            await LoadPaymentsAsync();
+            try
+            {
+                IsBusy = true;
+                await _apiService.DeletePaymentAsync(payment.Id); // ✅ Usar API
+                await LoadPaymentsAsync();
+                await Shell.Current.DisplayAlert("Éxito", "Pago eliminado", "OK");
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Error", $"Error: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
     }
 }

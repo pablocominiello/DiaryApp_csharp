@@ -46,18 +46,6 @@ public partial class DiaryEntriesViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private async Task AddEntryAsync()
-    {
-        await Shell.Current.GoToAsync(nameof(Views.DiaryEntryDetailPage));
-    }
-
-    [RelayCommand]
-    private async Task GoToDetailAsync(DiaryEntry entry)
-    {
-        await Shell.Current.GoToAsync($"{nameof(Views.DiaryEntryDetailPage)}?Id={entry.Id}");
-    }
-
-    [RelayCommand]
     private async Task DeleteEntryAsync(DiaryEntry entry)
     {
         var confirm = await Shell.Current.DisplayAlert("Confirm", 

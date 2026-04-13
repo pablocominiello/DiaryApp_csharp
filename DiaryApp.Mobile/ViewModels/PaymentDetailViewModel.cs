@@ -1,6 +1,6 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DiaryApp.Mobile.Models;
+using DiaryApp.Shared.Models;
 using DiaryApp.Mobile.Services;
 
 namespace DiaryApp.Mobile.ViewModels;
@@ -9,13 +9,19 @@ namespace DiaryApp.Mobile.ViewModels;
 [QueryProperty(nameof(PersonId), nameof(PersonId))]
 public partial class PaymentDetailViewModel : BaseViewModel
 {
-    private readonly IDatabaseService _databaseService;
+    private readonly IApiService _apiService; // ✅ Cambiar de IDatabaseService
 
     [ObservableProperty]
     private int id;
 
     [ObservableProperty]
     private int personId;
+
+    [ObservableProperty]
+    private decimal amount;
+
+    [ObservableProperty]
+    private string? comentary;
 
     [ObservableProperty]
     private int ano = DateTime.Now.Year;
@@ -29,9 +35,9 @@ public partial class PaymentDetailViewModel : BaseViewModel
     [ObservableProperty]
     private string? comprobanteUrl;
 
-    public PaymentDetailViewModel(IDatabaseService databaseService)
+    public PaymentDetailViewModel(IApiService apiService) // ✅ Cambiar parámetro
     {
-        _databaseService = databaseService;
+        _apiService = apiService;
         Title = "Detalle Pago";
     }
 
@@ -45,15 +51,24 @@ public partial class PaymentDetailViewModel : BaseViewModel
 
     private async Task LoadPaymentAsync(int paymentId)
     {
-        var payment = await _databaseService.GetPaymentAsync(paymentId);
-        if (payment != null)
+        try
         {
-            PersonId = payment.PeoplesId;
-            Ano = payment.Ano;
-            Mes = payment.Mes;
-            Fecha = payment.Fecha;
-            ComprobanteUrl = payment.ComprobanteUrl;
-            Title = "Editar Pago";
+            var payment = await _apiService.GetPaymentAsync(paymentId); // ✅ Usar API
+            if (payment != null)
+            {
+                PersonId = payment.PeoplesId;
+                Amount = payment.Amount;
+                Comentary = payment.Comentary;
+                Ano = payment.Ano;
+                Mes = payment.Mes;
+                Fecha = payment.Fecha;
+                ComprobanteUrl = payment.ComprobanteUrl;
+                Title = "Editar Pago";
+            }
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlert("Error", $"Error: {ex.Message}", "OK");
         }
     }
 
@@ -66,17 +81,47 @@ public partial class PaymentDetailViewModel : BaseViewModel
             return;
         }
 
-        var payment = new Payment
+        try
         {
-            Id = Id,
-            PeoplesId = PersonId,
-            Ano = Ano,
-            Mes = Mes,
-            Fecha = Fecha,
-            ComprobanteUrl = ComprobanteUrl
-        };
+            IsBusy = true;
 
-        await _databaseService.SavePaymentAsync(payment);
+            var payment = new Payment
+            {
+                Id = Id,
+                PeoplesId = PersonId,
+                Amount = Amount,
+                Comentary = Comentary,
+                Ano = Ano,
+                Mes = Mes,
+                Fecha = Fecha,
+                ComprobanteUrl = ComprobanteUrl
+            };
+
+            if (Id == 0)
+            {
+                await _apiService.CreatePaymentAsync(payment); // ✅ Usar API
+            }
+            else
+            {
+                await _apiService.UpdatePaymentAsync(payment); // ✅ Usar API
+            }
+
+            await Shell.Current.DisplayAlert("Éxito", "Pago guardado", "OK");
+            await Shell.Current.GoToAsync("..");
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlert("Error", $"Error: {ex.Message}", "OK");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task CancelAsync()
+    {
         await Shell.Current.GoToAsync("..");
     }
 }
