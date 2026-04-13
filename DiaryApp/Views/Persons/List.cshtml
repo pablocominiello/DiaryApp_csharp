@@ -97,7 +97,7 @@
             {
                 @foreach (var person in Model.Items)
                 {
-                    var canViewPayments = isAdmin || person.Id == currentUserPersonId;
+                    var canEdit = isAdmin || person.Id == currentUserPersonId;
                     
                     <tr>
                         <td>
@@ -126,32 +126,41 @@
                         <td class="align-middle">
                             @person.Born.ToString("dd/MM/yyyy")
                             <br />
-                            <small class="text-muted">
-                                (@((DateTime.Now.Year - person.Born.Year)) años)
-                            </small>
+
                         </td>
                         <td class="align-middle">
-                            @if (person.Content.Length > 50)
+                            @if (!string.IsNullOrEmpty(person.Content))
                             {
-                                <span>@person.Content.Substring(0, 50)...</span>
+                                if (person.Content.Length > 50)
+                                {
+                                    <span>@person.Content.Substring(0, 50)...</span>
+                                }
+                                else
+                                {
+                                    <span>@person.Content</span>
+                                }
                             }
                             else
                             {
-                                <span>@person.Content</span>
+                                <small class="text-muted">(Sin descripción)</small>
                             }
                         </td>
                         <td class="align-middle">
                             <div class="btn-group" role="group">
-                                <a asp-controller="Persons" 
-                                   asp-action="EditPerson" 
-                                   asp-route-id="@person.Id" 
-                                   class="btn btn-sm btn-primary"
-                                   title="Editar persona">
-                                    <i class="bi bi-pencil-square"></i> Editar
-                                </a>
+                                @* ✅ MODIFICADO: Mostrar botón de Editar solo si es Admin o es su propio registro *@
+                                @if (canEdit)
+                                {
+                                    <a asp-controller="Persons" 
+                                       asp-action="EditPerson" 
+                                       asp-route-id="@person.Id" 
+                                       class="btn btn-sm btn-primary"
+                                       title="Editar persona">
+                                        <i class="bi bi-pencil-square"></i> Editar
+                                    </a>
+                                }
                                 
-                                @* ✅ NUEVO: Mostrar botón de Pagos solo si es Admin o es su propio registro *@
-                                @if (canViewPayments)
+                                @* ✅ Mostrar botón de Pagos solo si es Admin o es su propio registro *@
+                                @if (canEdit)
                                 {
                                     <a asp-controller="Payments" 
                                        asp-action="Index" 

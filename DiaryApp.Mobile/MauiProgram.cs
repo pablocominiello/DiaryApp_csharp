@@ -24,30 +24,39 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 #endif
 
-		// ✅ Registrar BlobStorageService (implementación local para desarrollo)
+		// Configurar la URL base del API - DESARROLLO
+		const string apiBaseUrl = "https://dev-diaryapp-c2cuanhkf2f6axee.canadacentral-01.azurewebsites.net/api/";
+
+		// Registrar HttpClient para AuthService
+		builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
+		{
+			client.BaseAddress = new Uri(apiBaseUrl);
+			client.Timeout = TimeSpan.FromSeconds(30);
+		});
+
+		// Blob Storage
 		builder.Services.AddSingleton<IBlobStorageService>(sp =>
 		{
 			var connectionString = Environment.GetEnvironmentVariable("AZURE_BLOB_CONNECTION_STRING");
 			
-			// Si no hay connection string válida, usar implementación local
 			if (string.IsNullOrEmpty(connectionString) || connectionString.Contains("devaccount"))
 			{
-				System.Diagnostics.Debug.WriteLine("⚠️ Azure Blob Storage no configurado - usando implementación local");
+				System.Diagnostics.Debug.WriteLine("Azure Blob Storage no configurado - usando implementacion local");
 				return new LocalBlobStorageService();
 			}
 			
 			return new BlobStorageService(connectionString);
 		});
 
-		// ✅ Registrar HttpClient y ApiService apuntando a Azure
+		// ApiService (necesita IAuthService inyectado)
 		builder.Services.AddHttpClient<IApiService, ApiService>(client =>
 		{
-			// Apuntar a tu API en Azure
-			client.BaseAddress = new Uri("https://dev-diaryapp-c2cuanhkf2f6axee.canadacentral-01.azurewebsites.net/api/");
+			client.BaseAddress = new Uri(apiBaseUrl);
 			client.Timeout = TimeSpan.FromSeconds(30);
 		});
 
-		// Registrar ViewModels
+		// ViewModels
+		builder.Services.AddTransient<LoginViewModel>();
 		builder.Services.AddTransient<PersonsViewModel>();
 		builder.Services.AddTransient<PersonDetailViewModel>();
 		builder.Services.AddTransient<DiaryEntriesViewModel>();
@@ -56,7 +65,8 @@ public static class MauiProgram
 		builder.Services.AddTransient<PaymentDetailViewModel>();
 		builder.Services.AddTransient<DiagnosticsViewModel>();
 
-		// Registrar Views
+		// Views
+		builder.Services.AddTransient<LoginPage>();
 		builder.Services.AddTransient<PersonsPage>();
 		builder.Services.AddTransient<PersonDetailPage>();
 		builder.Services.AddTransient<DiaryEntriesPage>();

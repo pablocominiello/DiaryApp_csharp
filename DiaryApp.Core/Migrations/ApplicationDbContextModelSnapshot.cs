@@ -77,8 +77,15 @@ namespace DiaryApp.Core.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("Ano")
                         .HasColumnType("int");
+
+                    b.Property<string>("Comentary")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("ComprobanteUrl")
                         .HasColumnType("nvarchar(max)");
@@ -116,7 +123,6 @@ namespace DiaryApp.Core.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Content")
-                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 

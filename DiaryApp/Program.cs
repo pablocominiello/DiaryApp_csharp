@@ -1,6 +1,6 @@
 ﻿using DiaryApp.Core.Data;
 using DiaryApp.Core.Interfaces;
-using DiaryApp.Middleware; // ✅ Agregar
+using DiaryApp.Middleware;
 using DiaryApp.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +11,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// ✅ Configurar controladores API con opciones JSON
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -23,36 +22,34 @@ builder.Services.AddControllers()
 builder.Services.AddDbContext<ApplicationDbContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("defaultConnection")));
 
-// ✅ Configurar ASP.NET Core Identity
+// ✅ Agregar Health Checks
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ApplicationDbContext>();
+
+// Configurar ASP.NET Core Identity
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
-    // Configuración de contraseñas
-    options.Password.RequireDigit = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequiredLength = 8;
-    options.Password.RequiredUniqueChars = 1;
+    // ✅ Configuración de contraseña MÁS SIMPLE
+    options.Password.RequireDigit = false;           // ❌ No requiere números
+    options.Password.RequireLowercase = false;       // ❌ No requiere minúsculas
+    options.Password.RequireUppercase = false;       // ❌ No requiere mayúsculas
+    options.Password.RequireNonAlphanumeric = false; // ❌ No requiere caracteres especiales
+    options.Password.RequiredLength = 1;             // ✅ Mínimo 1 carácter (sin restricción práctica)
+    options.Password.RequiredUniqueChars = 1;        // ✅ Al menos 1 carácter único
 
-    // Configuración de bloqueo de cuenta
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
 
-    // Configuración de usuario
     options.User.RequireUniqueEmail = true;
-
-    // ✅ CAMBIO CRÍTICO: Activar verificación de email
     options.SignIn.RequireConfirmedEmail = true;
     options.SignIn.RequireConfirmedPhoneNumber = false;
-
-    // ✅ Configuración de tokens de email
     options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// ✅ Configurar cookies de autenticación
+// Configurar cookies de autenticación
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
@@ -65,13 +62,32 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
-// ✅ IMPORTANTE: Registrar servicio de email
+// Registrar servicios
 builder.Services.AddScoped<IEmailSender, EmailSender>();
-
-// Registrar el servicio de Azure Blob Storage
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 
 var app = builder.Build();
+
+// ✅ AUTO-MIGRACIÓN: Aplicar migraciones automáticamente al iniciar
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        
+        logger.LogInformation("Aplicando migraciones de base de datos...");
+        context.Database.Migrate();
+        logger.LogInformation("✅ Migraciones aplicadas exitosamente");
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "❌ Error al aplicar migraciones de base de datos");
+        throw;
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -83,19 +99,20 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
-// ✅ IMPORTANTE: Orden correcto - Authentication ANTES de Authorization
-app.UseAuthentication();
-app.UseAuthorization();
-
-// ✅ Middleware para verificar perfil completo (después de Authorization)
-app.UseProfileCompletion();
+// ✅ ORDEN CORRECTO:
+app.UseAuthentication();      // 1️⃣ Primero autenticar
+app.UseAuthorization();       // 2️⃣ Luego autorizar
+app.UseProfileCompletion();   // 3️⃣ Por último, verificar perfil
 
 app.MapStaticAssets();
 
-// ✅ Mapear controladores API
+// ✅ Health Check endpoints
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready");
+app.MapHealthChecks("/health/live");
+
 app.MapControllers();
 
-// Mapear controladores MVC para las vistas - Personas como página predeterminada
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Persons}/{action=Index}/{id?}")

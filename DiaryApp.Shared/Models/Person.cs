@@ -11,9 +11,10 @@ public class Person
     [Display(Name = "Nombre Completo")]
     public string Nombre { get; set; } = string.Empty;
     
+    // ✅ Campo OPCIONAL - sin [Required]
     [StringLength(250, ErrorMessage = "La descripción no puede exceder 250 caracteres")]
     [Display(Name = "Descripción / Observaciones")]
-    public string Content { get; set; } = string.Empty;
+    public string? Content { get; set; }
     
     [Required(ErrorMessage = "La fecha de nacimiento es requerida")]
     [Display(Name = "Fecha de Nacimiento")]

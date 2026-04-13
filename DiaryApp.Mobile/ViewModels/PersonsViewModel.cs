@@ -9,6 +9,7 @@ namespace DiaryApp.Mobile.ViewModels;
 public partial class PersonsViewModel : BaseViewModel
 {
     private readonly IApiService _apiService;
+    private readonly IAuthService _authService;
 
     [ObservableProperty]
     private ObservableCollection<Person> persons = [];
@@ -16,9 +17,10 @@ public partial class PersonsViewModel : BaseViewModel
     [ObservableProperty]
     private string searchText = string.Empty;
 
-    public PersonsViewModel(IApiService apiService)
+    public PersonsViewModel(IApiService apiService, IAuthService authService)
     {
         _apiService = apiService;
+        _authService = authService;
         Title = "Personas";
     }
 
@@ -117,6 +119,22 @@ public partial class PersonsViewModel : BaseViewModel
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task LogoutAsync()
+    {
+        var confirm = await Shell.Current.DisplayAlert(
+            "Cerrar Sesión",
+            "¿Estás seguro que deseas cerrar sesión?",
+            "Sí",
+            "No");
+
+        if (confirm)
+        {
+            await _authService.LogoutAsync();
+            await Shell.Current.GoToAsync("///login");
         }
     }
 }

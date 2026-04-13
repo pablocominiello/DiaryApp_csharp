@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqlserver
+  namespace: diaryapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sqlserver
+  template:
+    metadata:
+      labels:
+        app: sqlserver
+    spec:
+      containers:
+      - name: sqlserver
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        ports:
+        - containerPort: 1433
+          name: sql
+        env:
+        - name: ACCEPT_EULA
+          value: "Y"
+        - name: SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: diaryapp-secrets
+              key: SA_PASSWORD
+        - name: MSSQL_PID
+          valueFrom:
+            configMapKeyRef:
+              name: diaryapp-config
+              key: MSSQL_PID
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        volumeMounts:
+        - name: sqlserver-data
+          mountPath: /var/opt/mssql
+        livenessProbe:
+          exec:
+            command:
+            - /opt/mssql-tools18/bin/sqlcmd
+            - -S
+            - localhost
+            - -U
+            - sa
+            - -P
+            - $(SA_PASSWORD)
+            - -Q
+            - SELECT 1
+            - -C
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - /opt/mssql-tools18/bin/sqlcmd
+            - -S
+            - localhost
+            - -U
+            - sa
+            - -P
+            - $(SA_PASSWORD)
+            - -Q
+            - SELECT 1
+            - -C
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+      volumes:
+      - name: sqlserver-data
+        persistentVolumeClaim:
+          claimName: sqlserver-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sqlserver-pvc
+  namespace: diaryapp
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: managed-csi  # Azure Disk (cambia según tu AKS)
