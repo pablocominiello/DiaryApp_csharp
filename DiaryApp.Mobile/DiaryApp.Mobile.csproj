@@ -91,4 +91,8 @@
       <AndroidSigningStorePass>$(AndroidSigningPassword)</AndroidSigningStorePass>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU'">
+      <DebugSymbols>False</DebugSymbols>
+    </PropertyGroup>
+
 </Project>
