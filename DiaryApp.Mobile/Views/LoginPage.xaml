@@ -64,6 +64,16 @@
                        ClearButtonVisibility="WhileEditing"
                        IsEnabled="{Binding IsNotBusy}"/>
 
+                <!-- Recordar Usuario -->
+                <HorizontalStackLayout Spacing="10" Margin="0,10,0,0">
+                    <CheckBox IsChecked="{Binding RememberMe}"
+                              Color="{StaticResource Primary}"
+                              IsEnabled="{Binding IsNotBusy}"/>
+                    <Label Text="Recordar mi usuario" 
+                           TextColor="{StaticResource Primary}"
+                           VerticalOptions="Center"/>
+                </HorizontalStackLayout>
+
                 <!-- Error Message -->
                 <Label Text="{Binding ErrorMessage}"
                        TextColor="Red"
