@@ -1,0 +1,36 @@
+﻿@page
+@model DiaryApp.Pages.DownloadModel
+@{
+    ViewData["Title"] = "Descargar DiaryApp Mobile";
+}
+
+<div class="container mt-5">
+    <h1>📱 Descargar DiaryApp para Android</h1>
+
+    <div class="alert alert-warning mt-4">
+        <strong>⚠️ Instalación Manual Requerida</strong>
+        <p>Como esta app no está en Google Play Store, deberás permitir instalación de fuentes desconocidas en tu dispositivo.</p>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5>Versión @Model.AppVersion</h5>
+            <p>Tamaño: @Model.ApkSize MB</p>
+            <p><small class="text-muted">✓ APK firmado digitalmente</small></p>
+            <a href="~/downloads/DiaryApp.apk" class="btn btn-primary btn-lg" download>
+                <i class="bi bi-download"></i> Descargar APK
+            </a>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h3>📋 Instrucciones de Instalación:</h3>
+        <ol>
+            <li>Descarga el archivo APK</li>
+            <li>Ve a <strong>Configuración > Seguridad</strong></li>
+            <li>Activa <strong>"Fuentes desconocidas"</strong> o <strong>"Instalar apps desconocidas"</strong></li>
+            <li>Abre el archivo APK descargado</li>
+            <li>Toca <strong>Instalar</strong></li>
+        </ol>
+    </div>
+</div>

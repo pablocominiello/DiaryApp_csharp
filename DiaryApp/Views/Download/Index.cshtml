@@ -1,0 +1,123 @@
+﻿@{
+    ViewData["Title"] = "Descargar DiaryApp Mobile";
+}
+
+<div class="container mt-5">
+    <h1>📱 Descargar DiaryApp para Android</h1>
+
+    <div class="alert alert-info mt-4">
+        <strong>ℹ️ ¿Por qué no está en Google Play Store?</strong>
+        <p>Para mantener esta app 100% gratuita y sin anuncios, la distribuimos directamente. 
+        El APK está firmado digitalmente para garantizar su autenticidad.</p>
+    </div>
+
+    <div class="alert alert-warning mt-4">
+        <strong>⚠️ Instalación Manual Requerida</strong>
+        <p>Como esta app no está en Google Play Store, Android te pedirá permitir la instalación desde fuentes desconocidas. 
+        <strong>Esto es normal y seguro</strong> cuando descargas desde sitios de confianza.</p>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5>Versión @ViewBag.AppVersion</h5>
+            @if (ViewBag.ApkSize > 0)
+            {
+                <p>Tamaño: @ViewBag.ApkSize MB</p>
+            }
+            else
+            {
+                <p class="text-muted">APK no disponible aún</p>
+            }
+            <p><small class="text-muted">✓ APK firmado digitalmente</small></p>
+            <a href="~/downloads/DiaryApp.apk" class="btn btn-primary btn-lg" download>
+                <i class="bi bi-download"></i> Descargar APK
+            </a>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h3>📋 Instrucciones de Instalación:</h3>
+        
+        <div class="accordion" id="installAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#step1">
+                        Paso 1: Descargar el APK
+                    </button>
+                </h2>
+                <div id="step1" class="accordion-collapse collapse show" data-bs-parent="#installAccordion">
+                    <div class="accordion-body">
+                        <p>Click en el botón "Descargar APK" arriba. El archivo se guardará en tu carpeta de Descargas.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step2">
+                        Paso 2: Habilitar instalación desde fuentes desconocidas
+                    </button>
+                </h2>
+                <div id="step2" class="accordion-collapse collapse" data-bs-parent="#installAccordion">
+                    <div class="accordion-body">
+                        <p><strong>Android 8.0 o superior:</strong></p>
+                        <ol>
+                            <li>Abre el archivo APK descargado</li>
+                            <li>Android te mostrará una advertencia</li>
+                            <li>Toca <strong>"Configuración"</strong></li>
+                            <li>Activa <strong>"Permitir de esta fuente"</strong></li>
+                            <li>Vuelve atrás y continúa la instalación</li>
+                        </ol>
+                        <hr>
+                        <p><strong>Android 7.1 o anterior:</strong></p>
+                        <ol>
+                            <li>Ve a <strong>Configuración > Seguridad</strong></li>
+                            <li>Activa <strong>"Fuentes desconocidas"</strong></li>
+                            <li>Confirma el aviso</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step3">
+                        Paso 3: Instalar la app
+                    </button>
+                </h2>
+                <div id="step3" class="accordion-collapse collapse" data-bs-parent="#installAccordion">
+                    <div class="accordion-body">
+                        <ol>
+                            <li>Abre el archivo APK desde tus Descargas</li>
+                            <li>Toca <strong>"Instalar"</strong></li>
+                            <li>Espera a que termine la instalación</li>
+                            <li>Toca <strong>"Abrir"</strong> o busca el ícono "9Julio" en tu menú de apps</li>
+                        </ol>
+                        <div class="alert alert-success mt-3">
+                            <strong>💡 Consejo:</strong> Después de instalar, puedes desactivar "Fuentes desconocidas" nuevamente por seguridad.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h3>❓ Preguntas Frecuentes</h3>
+        <div class="card">
+            <div class="card-body">
+                <h6>¿Es seguro instalar desde aquí?</h6>
+                <p>Sí. Este sitio oficial de DiaryApp distribuye el APK firmado digitalmente. 
+                Android verificará la firma durante la instalación.</p>
+                
+                <h6 class="mt-3">¿Por qué Android muestra una advertencia?</h6>
+                <p>Android protege a los usuarios advirtiendo sobre apps no verificadas por Google Play. 
+                Es una medida de seguridad estándar, no significa que la app sea peligrosa.</p>
+                
+                <h6 class="mt-3">¿Recibiré actualizaciones automáticas?</h6>
+                <p>No. Deberás descargar e instalar manualmente las nuevas versiones desde esta página. 
+                Te notificaremos cuando haya actualizaciones disponibles.</p>
+            </div>
+        </div>
+    </div>
+</div>

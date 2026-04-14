@@ -76,4 +76,19 @@
 		<ProjectReference Include="..\DiaryApp.Shared\DiaryApp.Shared.csproj" />
 	</ItemGroup>
 
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' And '$(TargetFramework)' == 'net9.0-android'">
+	  <AndroidPackageFormat>apk</AndroidPackageFormat>
+	  <AndroidLinkMode>Full</AndroidLinkMode>
+	  <PublishTrimmed>true</PublishTrimmed>
+	  <RunAOTCompilation>false</RunAOTCompilation>
+	</PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(TargetFramework)' == 'net9.0-android'">
+      <AndroidKeyStore>true</AndroidKeyStore>
+      <AndroidSigningKeyStore>diaryapp.keystore</AndroidSigningKeyStore>
+      <AndroidSigningKeyAlias>diaryapp</AndroidSigningKeyAlias>
+      <AndroidSigningKeyPass>$(AndroidSigningPassword)</AndroidSigningKeyPass>
+      <AndroidSigningStorePass>$(AndroidSigningPassword)</AndroidSigningStorePass>
+    </PropertyGroup>
+
 </Project>

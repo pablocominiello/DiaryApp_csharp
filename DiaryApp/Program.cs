@@ -11,6 +11,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// ✅ NUEVO: Agregar soporte para Razor Pages
+builder.Services.AddRazorPages();
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -112,6 +115,9 @@ app.MapHealthChecks("/health/ready");
 app.MapHealthChecks("/health/live");
 
 app.MapControllers();
+
+// ✅ NUEVO: Mapear Razor Pages
+app.MapRazorPages();
 
 app.MapControllerRoute(
     name: "default",
