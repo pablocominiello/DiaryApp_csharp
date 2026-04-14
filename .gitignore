@@ -78,7 +78,7 @@ FodyWeavers.xsd
 *.sln.iml
 
 # ✅ Android/MAUI Build artifacts
-*.apk
+#*.apk
 *.aab
 *.ipa
 *.dSYM
