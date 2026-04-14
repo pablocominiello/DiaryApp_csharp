@@ -5,7 +5,7 @@
              x:Class="DiaryApp.Mobile.Views.LoginPage"
              x:DataType="viewmodels:LoginViewModel"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="{StaticResource Primary}">
+             BackgroundColor="#375A7F">
 
     <ScrollView>
         <Grid RowDefinitions="*,Auto,*" Padding="20">
@@ -19,16 +19,10 @@
                        WidthRequest="120" 
                        HorizontalOptions="Center"/>
 
-                <Label Text="DiaryApp" 
+                <Label Text="Circulo 9 de Julio" 
                        FontSize="32" 
                        FontAttributes="Bold" 
                        TextColor="White" 
-                       HorizontalOptions="Center"/>
-
-                <Label Text="Circulo 9 de Julio" 
-                       FontSize="18" 
-                       TextColor="White" 
-                       Opacity="0.8" 
                        HorizontalOptions="Center"/>
             </VerticalStackLayout>
 
@@ -36,30 +30,38 @@
             <VerticalStackLayout Grid.Row="1" 
                                Spacing="15"
                                Padding="20"
-                               BackgroundColor="White"
+                               BackgroundColor="{StaticResource Gray900}"
                                Margin="0,20,0,20">
 
-                <Label Text="Iniciar Sesion" 
+                <Label Text="Iniciar Sesión" 
                        FontSize="24" 
                        FontAttributes="Bold" 
-                       TextColor="{StaticResource Primary}"
+                       TextColor="#375A7F"
                        HorizontalOptions="Center"
                        Margin="0,0,0,20"/>
 
                 <!-- Email -->
                 <Label Text="Email" 
-                       TextColor="{StaticResource Primary}"/>
+                       TextColor="#375A7F"
+                       FontAttributes="Bold"/>
                 <Entry Text="{Binding Email}"
                        Placeholder="tu@email.com"
+                       PlaceholderColor="Gray"
+                       TextColor="Black"
+                       BackgroundColor="#F5F5F5"
                        Keyboard="Email"
                        ClearButtonVisibility="WhileEditing"
                        IsEnabled="{Binding IsNotBusy}"/>
 
                 <!-- Password -->
-                <Label Text="Contrasena" 
-                       TextColor="{StaticResource Primary}"/>
+                <Label Text="Contraseña" 
+                       TextColor="#375A7F"
+                       FontAttributes="Bold"/>
                 <Entry Text="{Binding Password}"
-                       Placeholder="Contrasena"
+                       Placeholder="Contraseña"
+                       PlaceholderColor="Gray"
+                       TextColor="Black"
+                       BackgroundColor="#F5F5F5"
                        IsPassword="True"
                        ClearButtonVisibility="WhileEditing"
                        IsEnabled="{Binding IsNotBusy}"/>
@@ -67,23 +69,24 @@
                 <!-- Recordar Usuario -->
                 <HorizontalStackLayout Spacing="10" Margin="0,10,0,0">
                     <CheckBox IsChecked="{Binding RememberMe}"
-                              Color="{StaticResource Primary}"
+                              Color="#375A7F"
                               IsEnabled="{Binding IsNotBusy}"/>
                     <Label Text="Recordar mi usuario" 
-                           TextColor="{StaticResource Primary}"
+                           TextColor="#375A7F"
                            VerticalOptions="Center"/>
                 </HorizontalStackLayout>
 
                 <!-- Error Message -->
                 <Label Text="{Binding ErrorMessage}"
                        TextColor="Red"
+                       FontAttributes="Bold"
                        IsVisible="{Binding HasError}"
                        Margin="0,10,0,0"/>
 
                 <!-- Login Button -->
-                <Button Text="Iniciar Sesion"
+                <Button Text="Iniciar Sesión"
                         Command="{Binding LoginCommand}"
-                        BackgroundColor="{StaticResource Primary}"
+                        BackgroundColor="#375A7F"
                         TextColor="White"
                         FontAttributes="Bold"
                         HeightRequest="50"
@@ -93,9 +96,24 @@
 
                 <!-- Activity Indicator -->
                 <ActivityIndicator IsRunning="{Binding IsBusy}"
-                                 Color="{StaticResource Primary}"
+                                 Color="#375A7F"
                                  HorizontalOptions="Center"
                                  Margin="0,10,0,0"/>
+
+                <!-- Registro Link -->
+                <HorizontalStackLayout HorizontalOptions="Center" 
+                                     Spacing="5"
+                                     Margin="0,20,0,0">
+                    <Label Text="¿No tienes cuenta?" 
+                           TextColor="Gray"/>
+                    <Label Text="Regístrate aquí" 
+                           TextColor="#375A7F"
+                           FontAttributes="Bold">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateToRegisterCommand}"/>
+                        </Label.GestureRecognizers>
+                    </Label>
+                </HorizontalStackLayout>
             </VerticalStackLayout>
 
             <!-- Footer -->
