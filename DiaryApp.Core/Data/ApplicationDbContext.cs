@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using PersonModel = DiaryApp.Shared.Models.Person;
 
 namespace DiaryApp.Core.Data
 {
@@ -12,7 +13,7 @@ namespace DiaryApp.Core.Data
         }
 
         public DbSet<DiaryEntry> DiaryEntries { get; set; } = null!;
-        public DbSet<Person> Peoples { get; set; } = null!;
+        public DbSet<PersonModel> Peoples { get; set; } = null!;
         public DbSet<Payment> Payments { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -58,18 +59,18 @@ namespace DiaryApp.Core.Data
                 .HasDatabaseName("IX_Payments_PeoplesId_Ano_Mes");
 
             // ✅ Relación OPCIONAL entre Person y IdentityUser
-            modelBuilder.Entity<Person>()
+            modelBuilder.Entity<PersonModel>()
                 .HasOne<IdentityUser>()
                 .WithOne()
-                .HasForeignKey<Person>(p => p.UserId)
-                .OnDelete(DeleteBehavior.SetNull)  // ✅ Cambio: permitir null al eliminar usuario
-                .IsRequired(false);  // ✅ Cambio: hacer la relación opcional
+                .HasForeignKey<PersonModel>(p => p.UserId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
 
             // ✅ Índice único (pero permitiendo null)
-            modelBuilder.Entity<Person>()
+            modelBuilder.Entity<PersonModel>()
                 .HasIndex(p => p.UserId)
                 .IsUnique()
-                .HasFilter("[UserId] IS NOT NULL");  // ✅ Solo aplicar unicidad cuando UserId no es null
+                .HasFilter("[UserId] IS NOT NULL");
         }
     }
 }

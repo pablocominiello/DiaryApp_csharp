@@ -9,7 +9,7 @@ namespace DiaryApp.Pages
 
         public void OnGet()
         {
-            var apkPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "downloads", "DiaryApp.apk");
+            var apkPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "downloads", "x9JulioApp.x9JulioApp.apk");
             if (System.IO.File.Exists(apkPath))
             {
                 var fileInfo = new FileInfo(apkPath);

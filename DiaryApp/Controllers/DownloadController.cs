@@ -15,7 +15,7 @@ namespace DiaryApp.Controllers
         {
             var apkPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "downloads", "DiaryApp.apk");
             
-            ViewBag.AppVersion = "1.0.0";
+            ViewBag.AppVersion = "1.0.1";
             ViewBag.ApkSize = 0L;
             ViewBag.ApkSizeFormatted = "No disponible";
 
@@ -31,7 +31,6 @@ namespace DiaryApp.Controllers
                 ViewBag.ApkSize = sizeRounded;
                 ViewBag.ApkSizeFormatted = sizeFormatted;
                 
-                // ✅ FIX: Usar variables tipadas en lugar de ViewBag
                 _logger.LogInformation("APK encontrado: {Bytes} bytes ({Size})", fileInfo.Length, sizeFormatted);
             }
             else
