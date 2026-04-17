@@ -34,11 +34,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- ✅ SOLO el icono por defecto de MAUI -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+		<!-- ✅ CORREGIDO: Icono de la app con nombre correcto -->
+		<MauiIcon Include="Resources\AppIcon\appiconborrar.png" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
 		
 		<!-- ✅ Splash Screen por defecto -->
-		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+		<MauiIcon Include="Resources\Splash\appicon.png" Color="#512BD4">
+		  <ForegroundFile>Resources\AppIcon\appiconfg.svg</ForegroundFile>
+		</MauiIcon>
 		
 		<!-- ✅ Imágenes generales -->
 		<MauiImage Include="Resources\Images\*" />
