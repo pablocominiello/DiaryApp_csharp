@@ -14,16 +14,25 @@
             <VerticalStackLayout Grid.Row="0" 
                                VerticalOptions="End" 
                                Spacing="20">
-                <Image Source="dotnet_bot.png" 
-                       HeightRequest="120" 
-                       WidthRequest="120" 
-                       HorizontalOptions="Center"/>
+                <!-- ✅ IMAGEN CAMBIADA: Logo del Círculo 9 de Julio -->
+                <Image Source="logo_9julio.png" 
+                       HeightRequest="160" 
+                       WidthRequest="160" 
+                       Aspect="AspectFit"
+                       HorizontalOptions="Center"
+                       Margin="0,0,0,10"/>
 
-                <Label Text="Circulo 9 de Julio" 
+                <Label Text="Círculo 9 de Julio" 
                        FontSize="32" 
                        FontAttributes="Bold" 
                        TextColor="White" 
                        HorizontalOptions="Center"/>
+                
+                <Label Text="Sistema de Gestión" 
+                       FontSize="16" 
+                       TextColor="LightGray" 
+                       HorizontalOptions="Center"
+                       Margin="0,-15,0,0"/>
             </VerticalStackLayout>
 
             <!-- Formulario de Login -->
@@ -118,7 +127,7 @@
 
             <!-- Footer -->
             <Label Grid.Row="2" 
-                   Text="v1.0.0 - Proyecto Educativo" 
+                   Text="v1.0.0 - Círculo 9 de Julio" 
                    TextColor="White" 
                    Opacity="0.6" 
                    FontSize="12" 

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using DiaryApp.Core.Data; // ✅ Cambiar de DiaryApp.Api.Data
+using DiaryApp.Core.Data;
 using DiaryApp.Shared.Models;
 
 namespace DiaryApp.Api.Controllers;
@@ -9,9 +9,9 @@ namespace DiaryApp.Api.Controllers;
 [Route("api/[controller]")]
 public class PersonsController : ControllerBase
 {
-    private readonly ApplicationDbContext _context; // ✅ Cambiar de AppDbContext
+    private readonly ApplicationDbContext _context;
 
-    public PersonsController(ApplicationDbContext context) // ✅ Cambiar tipo
+    public PersonsController(ApplicationDbContext context)
     {
         _context = context;
     }
@@ -41,6 +41,21 @@ public class PersonsController : ControllerBase
         if (person == null)
         {
             return NotFound();
+        }
+
+        return person;
+    }
+
+    // ✅ NUEVO: GET /api/persons/by-user/{userId}
+    [HttpGet("by-user/{userId}")]
+    public async Task<ActionResult<Person>> GetPersonByUserId(string userId)
+    {
+        var person = await _context.Peoples
+            .FirstOrDefaultAsync(p => p.UserId == userId);
+
+        if (person == null)
+        {
+            return NotFound(new { error = $"Person not found for UserId: {userId}" });
         }
 
         return person;

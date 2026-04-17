@@ -34,23 +34,21 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<MauiIcon Include="Resources\AppIcon\appicon.png" />
+		<!-- ✅ SOLO el icono por defecto de MAUI -->
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+		
+		<!-- ✅ Splash Screen por defecto -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+		
+		<!-- ✅ Imágenes generales -->
 		<MauiImage Include="Resources\Images\*" />
 		<MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
+		
+		<!-- ✅ Fuentes -->
 		<MauiFont Include="Resources\Fonts\*" />
+		
+		<!-- ✅ Assets -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<MauiImage Remove="Resources\Images\9 de julio azul.png" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Content Include="Resources\Images\9 de julio azul.png">
-			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</Content>
 	</ItemGroup>
 
 	<ItemGroup>

@@ -9,7 +9,7 @@ namespace DiaryApp.Mobile.ViewModels;
 [QueryProperty(nameof(PersonId), nameof(PersonId))]
 public partial class PaymentDetailViewModel : BaseViewModel
 {
-    private readonly IApiService _apiService; // ✅ Cambiar de IDatabaseService
+    private readonly IApiService _apiService;
 
     [ObservableProperty]
     private int id;
@@ -35,7 +35,7 @@ public partial class PaymentDetailViewModel : BaseViewModel
     [ObservableProperty]
     private string? comprobanteUrl;
 
-    public PaymentDetailViewModel(IApiService apiService) // ✅ Cambiar parámetro
+    public PaymentDetailViewModel(IApiService apiService)
     {
         _apiService = apiService;
         Title = "Detalle Pago";
@@ -45,15 +45,19 @@ public partial class PaymentDetailViewModel : BaseViewModel
     {
         if (value > 0)
         {
-            LoadPaymentAsync(value).ConfigureAwait(false);
+            _ = LoadPaymentAsync(value);
         }
     }
 
     private async Task LoadPaymentAsync(int paymentId)
     {
+        if (IsBusy)
+            return;
+
         try
         {
-            var payment = await _apiService.GetPaymentAsync(paymentId); // ✅ Usar API
+            IsBusy = true;
+            var payment = await _apiService.GetPaymentAsync(paymentId);
             if (payment != null)
             {
                 PersonId = payment.PeoplesId;
@@ -68,7 +72,12 @@ public partial class PaymentDetailViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Error", $"Error: {ex.Message}", "OK");
+            System.Diagnostics.Debug.WriteLine($"❌ Error loading payment: {ex.Message}");
+            await Shell.Current.DisplayAlert("Error", $"Error al cargar pago: {ex.Message}", "OK");
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 
@@ -80,6 +89,15 @@ public partial class PaymentDetailViewModel : BaseViewModel
             await Shell.Current.DisplayAlert("Error", "Seleccione una persona", "OK");
             return;
         }
+
+        if (Amount <= 0)
+        {
+            await Shell.Current.DisplayAlert("Error", "El monto debe ser mayor a 0", "OK");
+            return;
+        }
+
+        if (IsBusy)
+            return;
 
         try
         {
@@ -99,19 +117,21 @@ public partial class PaymentDetailViewModel : BaseViewModel
 
             if (Id == 0)
             {
-                await _apiService.CreatePaymentAsync(payment); // ✅ Usar API
+                await _apiService.CreatePaymentAsync(payment);
+                await Shell.Current.DisplayAlert("Éxito", "Pago creado correctamente", "OK");
             }
             else
             {
-                await _apiService.UpdatePaymentAsync(payment); // ✅ Usar API
+                await _apiService.UpdatePaymentAsync(payment);
+                await Shell.Current.DisplayAlert("Éxito", "Pago actualizado correctamente", "OK");
             }
 
-            await Shell.Current.DisplayAlert("Éxito", "Pago guardado", "OK");
             await Shell.Current.GoToAsync("..");
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Error", $"Error: {ex.Message}", "OK");
+            System.Diagnostics.Debug.WriteLine($"❌ Error saving payment: {ex.Message}");
+            await Shell.Current.DisplayAlert("Error", $"Error al guardar: {ex.Message}", "OK");
         }
         finally
         {

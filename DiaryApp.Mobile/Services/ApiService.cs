@@ -83,6 +83,44 @@ public class ApiService : IApiService
         }
     }
 
+    // ✅ NUEVO: Obtener Person por UserId
+    public async Task<Person?> GetPersonByUserIdAsync(string userId)
+    {
+        try
+        {
+            System.Diagnostics.Debug.WriteLine($"🔍 Fetching person by UserId: {userId}");
+            
+            var response = await _httpClient.GetAsync($"persons/by-user/{userId}");
+            
+            System.Diagnostics.Debug.WriteLine($"📊 Response Status: {response.StatusCode}");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ Person not found for UserId: {userId}");
+                return null;
+            }
+            
+            var content = await response.Content.ReadAsStringAsync();
+            System.Diagnostics.Debug.WriteLine($"📄 Response Content: {content}");
+            
+            var person = JsonSerializer.Deserialize<Person>(content, _jsonOptions);
+            
+            System.Diagnostics.Debug.WriteLine($"✅ Successfully loaded person for UserId: {userId}, PersonId: {person?.Id}");
+            
+            return person;
+        }
+        catch (JsonException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"❌ JSON Error getting person by UserId: {ex.Message}");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"❌ Error getting person by UserId: {ex.Message}");
+            return null;
+        }
+    }
+
     public async Task<Person> CreatePersonAsync(Person person)
     {
         var json = JsonSerializer.Serialize(person, _jsonOptions);
@@ -183,46 +221,168 @@ public class ApiService : IApiService
     // Payments
     public async Task<List<Payment>> GetPaymentsAsync(int? personId = null)
     {
-        var url = personId.HasValue ? $"payments?personId={personId}" : "payments";
-        var response = await _httpClient.GetAsync(url);
-        response.EnsureSuccessStatusCode();
-        
-        var content = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<List<Payment>>(content, _jsonOptions) ?? new List<Payment>();
+        try
+        {
+            var url = personId.HasValue ? $"payments?personId={personId}" : "payments";
+            
+            System.Diagnostics.Debug.WriteLine($"🔍 Fetching payments from: {url}");
+            
+            var response = await _httpClient.GetAsync(url);
+            
+            System.Diagnostics.Debug.WriteLine($"📊 Response Status: {response.StatusCode}");
+            
+            response.EnsureSuccessStatusCode();
+            
+            var content = await response.Content.ReadAsStringAsync();
+            
+            System.Diagnostics.Debug.WriteLine($"📄 Response Content Length: {content?.Length ?? 0}");
+            System.Diagnostics.Debug.WriteLine($"📄 Response Content: {content}");
+            
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                System.Diagnostics.Debug.WriteLine("⚠️ Empty response from API - returning empty list");
+                return new List<Payment>();
+            }
+            
+            var payments = JsonSerializer.Deserialize<List<Payment>>(content, _jsonOptions) ?? new List<Payment>();
+            
+            System.Diagnostics.Debug.WriteLine($"✅ Successfully deserialized {payments.Count} payments");
+            
+            return payments;
+        }
+        catch (JsonException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"❌ JSON Error getting payments: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Stack: {ex.StackTrace}");
+            throw new Exception($"Error parsing payments data: {ex.Message}", ex);
+        }
+        catch (HttpRequestException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"❌ HTTP Error getting payments: {ex.Message}");
+            throw new Exception($"Error fetching payments: {ex.Message}", ex);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"❌ Unexpected error getting payments: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Stack: {ex.StackTrace}");
+            throw;
+        }
     }
 
     public async Task<Payment?> GetPaymentAsync(int id)
     {
-        var response = await _httpClient.GetAsync($"payments/{id}");
-        if (!response.IsSuccessStatusCode)
+        try
+        {
+            System.Diagnostics.Debug.WriteLine($"🔍 Fetching payment ID: {id}");
+            
+            var response = await _httpClient.GetAsync($"payments/{id}");
+            
+            System.Diagnostics.Debug.WriteLine($"📊 Response Status: {response.StatusCode}");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ Payment {id} not found");
+                return null;
+            }
+            
+            var content = await response.Content.ReadAsStringAsync();
+            System.Diagnostics.Debug.WriteLine($"📄 Response Content: {content}");
+            
+            var payment = JsonSerializer.Deserialize<Payment>(content, _jsonOptions);
+            
+            System.Diagnostics.Debug.WriteLine($"✅ Successfully loaded payment {id}");
+            
+            return payment;
+        }
+        catch (JsonException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"❌ JSON Error getting payment {id}: {ex.Message}");
             return null;
-        
-        var content = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<Payment>(content, _jsonOptions);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"❌ Error getting payment {id}: {ex.Message}");
+            throw;
+        }
     }
 
     public async Task<Payment> CreatePaymentAsync(Payment payment)
     {
-        var json = JsonSerializer.Serialize(payment, _jsonOptions);
-        var response = await _httpClient.PostAsync("payments", new StringContent(json, System.Text.Encoding.UTF8, "application/json"));
-        response.EnsureSuccessStatusCode();
-        
-        var content = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<Payment>(content, _jsonOptions) 
-            ?? throw new Exception("Error creating payment");
+        try
+        {
+            System.Diagnostics.Debug.WriteLine($"➕ Creating payment for PersonId: {payment.PeoplesId}");
+            
+            var json = JsonSerializer.Serialize(payment, _jsonOptions);
+            
+            System.Diagnostics.Debug.WriteLine($"📄 Payload: {json}");
+            
+            var response = await _httpClient.PostAsync("payments", 
+                new StringContent(json, System.Text.Encoding.UTF8, "application/json"));
+            
+            System.Diagnostics.Debug.WriteLine($"📊 Response Status: {response.StatusCode}");
+            
+            response.EnsureSuccessStatusCode();
+            
+            var content = await response.Content.ReadAsStringAsync();
+            
+            System.Diagnostics.Debug.WriteLine($"📄 Response: {content}");
+            
+            var createdPayment = JsonSerializer.Deserialize<Payment>(content, _jsonOptions) 
+                ?? throw new Exception("Error creating payment");
+            
+            System.Diagnostics.Debug.WriteLine($"✅ Payment created with ID: {createdPayment.Id}");
+            
+            return createdPayment;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"❌ Error creating payment: {ex.Message}");
+            throw;
+        }
     }
 
     public async Task UpdatePaymentAsync(Payment payment)
     {
-        var json = JsonSerializer.Serialize(payment, _jsonOptions);
-        var response = await _httpClient.PutAsync($"payments/{payment.Id}", new StringContent(json, System.Text.Encoding.UTF8, "application/json"));
-        response.EnsureSuccessStatusCode();
+        try
+        {
+            System.Diagnostics.Debug.WriteLine($"✏️ Updating payment ID: {payment.Id}");
+            
+            var json = JsonSerializer.Serialize(payment, _jsonOptions);
+            var response = await _httpClient.PutAsync($"payments/{payment.Id}", 
+                new StringContent(json, System.Text.Encoding.UTF8, "application/json"));
+            
+            System.Diagnostics.Debug.WriteLine($"📊 Response Status: {response.StatusCode}");
+            
+            response.EnsureSuccessStatusCode();
+            
+            System.Diagnostics.Debug.WriteLine($"✅ Payment {payment.Id} updated successfully");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"❌ Error updating payment {payment.Id}: {ex.Message}");
+            throw;
+        }
     }
 
     public async Task DeletePaymentAsync(int id)
     {
-        var response = await _httpClient.DeleteAsync($"payments/{id}");
-        response.EnsureSuccessStatusCode();
+        try
+        {
+            System.Diagnostics.Debug.WriteLine($"🗑️ Deleting payment ID: {id}");
+            
+            var response = await _httpClient.DeleteAsync($"payments/{id}");
+            
+            System.Diagnostics.Debug.WriteLine($"📊 Response Status: {response.StatusCode}");
+            
+            response.EnsureSuccessStatusCode();
+            
+            System.Diagnostics.Debug.WriteLine($"✅ Payment {id} deleted successfully");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"❌ Error deleting payment {id}: {ex.Message}");
+            throw;
+        }
     }
 
     // Helper class for image upload response

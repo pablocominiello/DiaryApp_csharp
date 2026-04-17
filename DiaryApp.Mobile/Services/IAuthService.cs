@@ -7,6 +7,8 @@ public interface IAuthService
     Task<bool> IsAuthenticatedAsync();
     Task<string?> GetTokenAsync();
     string? GetUserEmail();
+    Task<string?> GetUserIdAsync();
+    Task<int?> GetPersonIdAsync();
 }
 
 public class AuthResult
@@ -15,5 +17,6 @@ public class AuthResult
     public string? Token { get; set; }
     public string? Email { get; set; }
     public string? UserId { get; set; }
+    public int? PersonId { get; set; }
     public string? ErrorMessage { get; set; }
 }
