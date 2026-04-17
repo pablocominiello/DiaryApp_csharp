@@ -31,11 +31,48 @@ bld/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
-# User Secrets - IMPORTANTE
+# ===== ARCHIVOS SENSIBLES - NO SUBIR A GIT =====
+
+# User Secrets y configuraciones de desarrollo
 secrets.json
 **/appsettings.Development.json
 **/appsettings.*.json
 !**/appsettings.json
+!**/appsettings.Production.json
+appsettings.Development.json
+appsettings.Local.json
+appsettings.Staging.json
+
+# Kubernetes secrets (CRÍTICO)
+**/secrets.yaml
+**/secrets.yml
+k8s/**/secrets.yaml
+k8s/**/secrets.yml
+k8s-minikube/**/secrets.yaml
+k8s-minikube/**/secrets.yml
+
+# Azure y Cloud credentials
+*.publishsettings
+*.azurePubxml
+*.pubxml
+*.PublishSettings
+
+# Archivos de certificados y llaves
+*.pfx
+*.p12
+*.key
+*.pem
+*.cer
+*.crt
+*.keystore
+*.jks
+
+# Variables de entorno
+.env
+.env.local
+.env.development
+.env.production
+*.env
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
@@ -73,18 +110,39 @@ node_modules/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# JetBrider Rider
+# JetBrains Rider
 .idea/
 *.sln.iml
 
 # ✅ Android/MAUI Build artifacts
-#*.apk
+# Comentado para permitir subir APK de distribución si es necesario
+# *.apk
 *.aab
 *.ipa
 *.dSYM
-*.keystore
-*.jks
 *.csproj.user
 
 # Android signing configuration
 **/DiaryApp.Mobile.csproj.user
+
+# Terraform state files (si usas Terraform)
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Docker secrets
+docker-compose.override.yml
+.dockerignore
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ===== ARCHIVOS DE EJEMPLO - MANTENER =====
+# Si tienes archivos de ejemplo, agrégalos aquí con !
+# !appsettings.Example.json
+# !secrets.Example.yaml
