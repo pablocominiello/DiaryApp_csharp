@@ -1,12 +1,15 @@
 ﻿using DiaryApp.Core.Data;
-using DiaryApp.Shared.Models; // ✅ Cambiar de DiaryApp.Core.Models
+using DiaryApp.Shared.Models;
 using DiaryApp.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DiaryApp.Controllers
 {
+    [Authorize]
     public class PaymentsController : Controller
     {
         private readonly ApplicationDbContext _db;
@@ -19,51 +22,72 @@ namespace DiaryApp.Controllers
         }
 
         // GET: Payments
-        public ActionResult Index(int? personId)
+        public async Task<ActionResult> Index()
         {
-            var paymentsQuery = _db.Payments
-                .Include(p => p.Person)
-                .AsQueryable();
-
-            // Filtrar por persona si se proporciona el parámetro
-            if (personId.HasValue && personId.Value > 0)
+            // Obtener el ID del usuario logueado
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            if (string.IsNullOrEmpty(userId))
             {
-                paymentsQuery = paymentsQuery.Where(p => p.PeoplesId == personId.Value);
-                
-                // Obtener el nombre y la imagen de la persona para mostrarlos
-                var person = _db.Peoples.Find(personId.Value);
-                if (person != null)
-                {
-                    ViewBag.PersonName = person.Nombre;
-                    ViewBag.PersonImageUrl = person.ImagenUrl;
-                    ViewBag.PersonId = personId.Value;
-                }
+                return RedirectToAction("Login", "Account");
             }
 
-            List<Payment> paymentList = paymentsQuery
+            // Obtener la persona asociada al usuario logueado
+            var currentPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+            
+            if (currentPerson == null)
+            {
+                TempData["Error"] = "No se encontró un perfil de persona asociado a su usuario.";
+                return RedirectToAction("Index", "Persons");
+            }
+
+            // Filtrar solo los pagos de la persona logueada
+            var paymentsQuery = _db.Payments
+                .Include(p => p.Person)
+                .Where(p => p.PeoplesId == currentPerson.Id);
+
+            ViewBag.PersonName = currentPerson.Nombre;
+            ViewBag.PersonImageUrl = currentPerson.ImagenUrl;
+            ViewBag.PersonId = currentPerson.Id;
+
+            List<Payment> paymentList = await paymentsQuery
                 .OrderByDescending(p => p.Fecha)
-                .ToList();
+                .ToListAsync();
 
             return View(paymentList);
         }
 
         // GET: Payments/Create
-        public ActionResult Create(int? personId)
+        public async Task<ActionResult> Create()
         {
-            ViewBag.Peoples = new SelectList(_db.Peoples, "Id", "Nombre");
+            // Obtener el ID del usuario logueado
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Obtener la persona asociada al usuario logueado
+            var currentPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+            
+            if (currentPerson == null)
+            {
+                TempData["Error"] = "No se encontró un perfil de persona asociado a su usuario.";
+                return RedirectToAction("Index", "Persons");
+            }
+
+            // Solo mostrar la persona logueada en la lista (aunque no se podrá cambiar)
+            ViewBag.Peoples = new SelectList(new[] { currentPerson }, "Id", "Nombre", currentPerson.Id);
             
             // Crear un modelo con valores por defecto
             var payment = new Payment
             {
-                Ano = 2026,
+                PeoplesId = currentPerson.Id,
+                Ano = DateTime.Now.Year,
+                Mes = DateTime.Now.Month, // ✅ Agregar el mes actual
                 Fecha = DateTime.Now
             };
-            
-            // Si se recibe un personId, preseleccionar la persona
-            if (personId.HasValue && personId.Value > 0)
-            {
-                payment.PeoplesId = personId.Value;
-            }
             
             return View(payment);
         }
@@ -73,19 +97,33 @@ namespace DiaryApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(Payment obj, IFormFile? comprobanteFile)
         {
-            // Server-side validation
-            if (obj != null && obj.PeoplesId == 0)
+            // Obtener el ID del usuario logueado
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            if (string.IsNullOrEmpty(userId))
             {
-                ModelState.AddModelError("PeoplesId", "Debe seleccionar una persona");
+                return RedirectToAction("Login", "Account");
             }
 
+            // Obtener la persona asociada al usuario logueado
+            var currentPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+            
+            if (currentPerson == null)
+            {
+                TempData["Error"] = "No se encontró un perfil de persona asociado a su usuario.";
+                return RedirectToAction("Index", "Persons");
+            }
+
+            // Forzar que el pago sea para la persona logueada (seguridad)
+            obj.PeoplesId = currentPerson.Id;
+
             // Validar que no exista un pago duplicado
-            var existingPayment = _db.Payments
-                .FirstOrDefault(p => p.PeoplesId == obj.PeoplesId && p.Ano == obj.Ano && p.Mes == obj.Mes);
+            var existingPayment = await _db.Payments
+                .FirstOrDefaultAsync(p => p.PeoplesId == obj.PeoplesId && p.Ano == obj.Ano && p.Mes == obj.Mes);
     
             if (existingPayment != null)
             {
-                ModelState.AddModelError("", $"Ya existe un pago registrado para esta persona en {obj.Mes}/{obj.Ano}");
+                ModelState.AddModelError("", $"Ya existe un pago registrado para {obj.Mes}/{obj.Ano}");
             }
 
             if (ModelState.IsValid)
@@ -101,40 +139,62 @@ namespace DiaryApp.Controllers
                     catch (Exception ex)
                     {
                         ModelState.AddModelError("", $"Error al subir el comprobante: {ex.Message}");
-                        ViewBag.Peoples = new SelectList(_db.Peoples, "Id", "Nombre", obj.PeoplesId);
-                        ViewBag.PersonId = obj.PeoplesId;
+                        ViewBag.Peoples = new SelectList(new[] { currentPerson }, "Id", "Nombre", currentPerson.Id);
                         return View(obj);
                     }
                 }
 
                 _db.Payments.Add(obj);
                 await _db.SaveChangesAsync();
-                return RedirectToAction("Index", new { personId = obj.PeoplesId });
+                TempData["Success"] = "Pago registrado exitosamente";
+                return RedirectToAction("Index");
             }
 
-            ViewBag.Peoples = new SelectList(_db.Peoples, "Id", "Nombre", obj.PeoplesId);
-            ViewBag.PersonId = obj.PeoplesId;
+            ViewBag.Peoples = new SelectList(new[] { currentPerson }, "Id", "Nombre", currentPerson.Id);
             return View(obj);
         }
 
         // GET: Payments/Edit/5
         [HttpGet]
-        public ActionResult Edit(int id)
+        public async Task<ActionResult> Edit(int id)
         {
             if (id == 0)
             {
                 return NotFound();
             }
 
-            Payment payment = _db.Payments.Find(id);
+            // Obtener el ID del usuario logueado
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Obtener la persona asociada al usuario logueado
+            var currentPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+            
+            if (currentPerson == null)
+            {
+                TempData["Error"] = "No se encontró un perfil de persona asociado a su usuario.";
+                return RedirectToAction("Index", "Persons");
+            }
+
+            Payment payment = await _db.Payments.FindAsync(id);
 
             if (payment == null)
             {
                 return NotFound();
             }
 
-            ViewBag.Peoples = new SelectList(_db.Peoples, "Id", "Nombre", payment.PeoplesId);
-            ViewBag.PersonId = payment.PeoplesId;
+            // Verificar que el pago pertenezca a la persona logueada
+            if (payment.PeoplesId != currentPerson.Id)
+            {
+                TempData["Error"] = "No tiene permiso para editar este pago.";
+                return RedirectToAction("Index");
+            }
+
+            ViewBag.Peoples = new SelectList(new[] { currentPerson }, "Id", "Nombre", currentPerson.Id);
             return View(payment);
         }
 
@@ -143,10 +203,25 @@ namespace DiaryApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit(Payment obj, IFormFile? comprobanteFile)
         {
-            if (obj != null && obj.PeoplesId == 0)
+            // Obtener el ID del usuario logueado
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            if (string.IsNullOrEmpty(userId))
             {
-                ModelState.AddModelError("PeoplesId", "Debe seleccionar una persona");
+                return RedirectToAction("Login", "Account");
             }
+
+            // Obtener la persona asociada al usuario logueado
+            var currentPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+            
+            if (currentPerson == null)
+            {
+                TempData["Error"] = "No se encontró un perfil de persona asociado a su usuario.";
+                return RedirectToAction("Index", "Persons");
+            }
+
+            // Forzar que el pago sea para la persona logueada (seguridad)
+            obj.PeoplesId = currentPerson.Id;
 
             if (ModelState.IsValid)
             {
@@ -168,37 +243,61 @@ namespace DiaryApp.Controllers
                     catch (Exception ex)
                     {
                         ModelState.AddModelError("", $"Error al actualizar el comprobante: {ex.Message}");
-                        ViewBag.Peoples = new SelectList(_db.Peoples, "Id", "Nombre", obj.PeoplesId);
-                        ViewBag.PersonId = obj.PeoplesId;
+                        ViewBag.Peoples = new SelectList(new[] { currentPerson }, "Id", "Nombre", currentPerson.Id);
                         return View(obj);
                     }
                 }
 
                 _db.Payments.Update(obj);
                 await _db.SaveChangesAsync();
-                return RedirectToAction("Index", new { personId = obj.PeoplesId });
+                TempData["Success"] = "Pago actualizado exitosamente";
+                return RedirectToAction("Index");
             }
 
-            ViewBag.Peoples = new SelectList(_db.Peoples, "Id", "Nombre", obj.PeoplesId);
-            ViewBag.PersonId = obj.PeoplesId;
+            ViewBag.Peoples = new SelectList(new[] { currentPerson }, "Id", "Nombre", currentPerson.Id);
             return View(obj);
         }
 
         // GET: Payments/Delete/5
         [HttpGet]
-        public ActionResult Delete(int id)
+        public async Task<ActionResult> Delete(int id)
         {
             if (id == 0)
             {
                 return NotFound();
             }
 
-            Payment payment = _db.Payments.Include(p => p.Person).FirstOrDefault(p => p.Id == id);
+            // Obtener el ID del usuario logueado
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Obtener la persona asociada al usuario logueado
+            var currentPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+            
+            if (currentPerson == null)
+            {
+                TempData["Error"] = "No se encontró un perfil de persona asociado a su usuario.";
+                return RedirectToAction("Index", "Persons");
+            }
+
+            Payment payment = await _db.Payments.Include(p => p.Person).FirstOrDefaultAsync(p => p.Id == id);
 
             if (payment == null)
             {
                 return NotFound();
             }
+
+            // Verificar que el pago pertenezca a la persona logueada
+            if (payment.PeoplesId != currentPerson.Id)
+            {
+                TempData["Error"] = "No tiene permiso para eliminar este pago.";
+                return RedirectToAction("Index");
+            }
+
             return View(payment);
         }
 
@@ -207,11 +306,35 @@ namespace DiaryApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            Payment payment = _db.Payments.Find(id);
+            // Obtener el ID del usuario logueado
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Obtener la persona asociada al usuario logueado
+            var currentPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+            
+            if (currentPerson == null)
+            {
+                TempData["Error"] = "No se encontró un perfil de persona asociado a su usuario.";
+                return RedirectToAction("Index", "Persons");
+            }
+
+            Payment payment = await _db.Payments.FindAsync(id);
 
             if (payment == null)
             {
                 return NotFound();
+            }
+
+            // Verificar que el pago pertenezca a la persona logueada
+            if (payment.PeoplesId != currentPerson.Id)
+            {
+                TempData["Error"] = "No tiene permiso para eliminar este pago.";
+                return RedirectToAction("Index");
             }
 
             // Eliminar comprobante de Azure Blob Storage
@@ -229,6 +352,7 @@ namespace DiaryApp.Controllers
 
             _db.Payments.Remove(payment);
             await _db.SaveChangesAsync();
+            TempData["Success"] = "Pago eliminado exitosamente";
             return RedirectToAction("Index");
         }
     }

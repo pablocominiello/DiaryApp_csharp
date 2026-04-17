@@ -1,4 +1,5 @@
 ﻿using DiaryApp.Mobile.Services;
+using DiaryApp.Mobile.Views;
 
 namespace DiaryApp.Mobile;
 
@@ -7,38 +8,66 @@ public partial class App : Application
     private readonly IAuthService _authService;
 
     public App(IAuthService authService)
-    {
-        InitializeComponent();
-        _authService = authService;
+	{
+		InitializeComponent();
+		_authService = authService;
 
-        // Manejar excepciones globales
-        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-        {
-            var exception = e.ExceptionObject as Exception;
-            System.Diagnostics.Debug.WriteLine($"UNHANDLED EXCEPTION: {exception?.Message}");
-        };
+		// ✅ Capturar excepciones no manejadas
+		AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+		TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
-        TaskScheduler.UnobservedTaskException += (s, e) =>
-        {
-            System.Diagnostics.Debug.WriteLine($"UNOBSERVED TASK EXCEPTION: {e.Exception?.Message}");
-            e.SetObserved();
-        };
+		MainPage = new AppShell();
+	}
 
-        MainPage = new AppShell();
-    }
+	private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+	{
+		var exception = e.ExceptionObject as Exception;
+		System.Diagnostics.Debug.WriteLine($"❌ UNHANDLED EXCEPTION: {exception?.Message}");
+		System.Diagnostics.Debug.WriteLine($"StackTrace: {exception?.StackTrace}");
+		
+		// Mostrar alerta al usuario
+		MainThread.BeginInvokeOnMainThread(async () =>
+		{
+			if (MainPage != null)
+			{
+				await MainPage.DisplayAlert(
+					"Error crítico",
+					$"La aplicación encontró un error:\n\n{exception?.Message}\n\nLa app se cerrará.",
+					"OK");
+			}
+		});
+	}
+
+	private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+	{
+		System.Diagnostics.Debug.WriteLine($"❌ UNOBSERVED TASK EXCEPTION: {e.Exception?.Message}");
+		System.Diagnostics.Debug.WriteLine($"StackTrace: {e.Exception?.StackTrace}");
+		e.SetObserved(); // Evita que la app se cierre
+	}
 
     protected override async void OnStart()
     {
         base.OnStart();
         
-        // En DEBUG, limpiar sesión cada vez que inicia (para pruebas)
-#if DEBUG
-        await _authService.LogoutAsync();
-        System.Diagnostics.Debug.WriteLine("DEBUG: Sesión limpiada automáticamente");
-#endif
+        System.Diagnostics.Debug.WriteLine("===== APP STARTED =====");
+        System.Diagnostics.Debug.WriteLine($"Device: {DeviceInfo.Current.Name}");
+        System.Diagnostics.Debug.WriteLine($"Platform: {DeviceInfo.Current.Platform}");
+        System.Diagnostics.Debug.WriteLine($"Version: {DeviceInfo.Current.VersionString}");
         
-        // Verificar autenticación cuando la app inicia
-        await CheckAuthenticationAsync();
+        try
+        {
+#if DEBUG
+            await _authService.LogoutAsync();
+            System.Diagnostics.Debug.WriteLine("DEBUG: Sesión limpiada automáticamente");
+#endif
+            
+            await CheckAuthenticationAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"❌ OnStart Exception: {ex}");
+            await MainPage.DisplayAlert("Error de inicio", ex.Message, "OK");
+        }
     }
 
     private async Task CheckAuthenticationAsync()

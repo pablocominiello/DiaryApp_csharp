@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
@@ -11,7 +11,7 @@
 		<Nullable>enable</Nullable>
 
 		<ApplicationTitle>9Julio</ApplicationTitle>
-		<ApplicationId>com.companyname.diaryapp.mobile</ApplicationId>
+		<ApplicationId>com.circulo9julio.app</ApplicationId>
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
@@ -34,7 +34,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-    <MauiIcon Include="Resources\AppIcon\appicon.png" />
+		<MauiIcon Include="Resources\AppIcon\appicon.png" />
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 		<MauiImage Include="Resources\Images\*" />
 		<MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
@@ -43,14 +43,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <MauiImage Remove="Resources\Images\9 de julio azul.png" />
+		<MauiImage Remove="Resources\Images\9 de julio azul.png" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Content Include="Resources\Images\9 de julio azul.png">
-	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-	  </Content>
+		<Content Include="Resources\Images\9 de julio azul.png">
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -67,7 +67,7 @@
 			<SubType>Designer</SubType>
 		</MauiXaml>
 		<MauiXaml Update="Views\LoginPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 	</ItemGroup>
 
@@ -76,23 +76,28 @@
 		<ProjectReference Include="..\DiaryApp.Shared\DiaryApp.Shared.csproj" />
 	</ItemGroup>
 
-	<PropertyGroup Condition="'$(Configuration)' == 'Release' And '$(TargetFramework)' == 'net9.0-android'">
-	  <AndroidPackageFormat>apk</AndroidPackageFormat>
-	  <AndroidLinkMode>Full</AndroidLinkMode>
-	  <PublishTrimmed>true</PublishTrimmed>
-	  <RunAOTCompilation>false</RunAOTCompilation>
+	<!-- ✅ Debug: SIN firma (para desarrollo en emulador) -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug' And '$(TargetFramework)' == 'net9.0-android'">
+		<AndroidKeyStore>false</AndroidKeyStore>
+		<AndroidSigningKeyStore></AndroidSigningKeyStore>
+		<AndroidSigningKeyAlias></AndroidSigningKeyAlias>
 	</PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(TargetFramework)' == 'net9.0-android'">
-      <AndroidKeyStore>true</AndroidKeyStore>
-      <AndroidSigningKeyStore>diaryapp.keystore</AndroidSigningKeyStore>
-      <AndroidSigningKeyAlias>diaryapp</AndroidSigningKeyAlias>
-      <AndroidSigningKeyPass>$(AndroidSigningPassword)</AndroidSigningKeyPass>
-      <AndroidSigningStorePass>$(AndroidSigningPassword)</AndroidSigningStorePass>
-    </PropertyGroup>
+	<!-- ✅ Release: CON firma (para publicación) -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' And '$(TargetFramework)' == 'net9.0-android'">
+		<!-- Configuración de APK -->
+		<AndroidPackageFormat>apk</AndroidPackageFormat>
+		<AndroidLinkMode>None</AndroidLinkMode>
+		<PublishTrimmed>false</PublishTrimmed>
+		<RunAOTCompilation>false</RunAOTCompilation>
+		<DebugSymbols>False</DebugSymbols>
 
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU'">
-      <DebugSymbols>False</DebugSymbols>
-    </PropertyGroup>
+		<!-- ✅ Configuración de firma (KeyStore) -->
+		<AndroidKeyStore>true</AndroidKeyStore>
+		<AndroidSigningKeyStore>diaryapp.keystore</AndroidSigningKeyStore>
+		<AndroidSigningKeyAlias>9julio</AndroidSigningKeyAlias>
+		<AndroidSigningKeyPass>$(AndroidSigningPassword)</AndroidSigningKeyPass>
+		<AndroidSigningStorePass>$(AndroidSigningPassword)</AndroidSigningStorePass>
+	</PropertyGroup>
 
 </Project>

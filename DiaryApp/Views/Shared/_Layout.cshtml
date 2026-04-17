@@ -51,11 +51,6 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="PEC">
-                                <i class="bi bi-house-door-fill"></i> pec alfa 0.37.9
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link text-light" asp-area="" asp-controller="Persons" asp-action="index">
                                 <i class="bi bi-people-fill"></i> MiUsuario
                             </a>
@@ -66,19 +61,19 @@
                             </a>
                         </li>
                         
-                        @* ✅ NUEVO: Mostrar "Pagos" solo si es Admin *@
-                        @if (isAdmin)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-light" asp-area="" asp-controller="Payments" asp-action="Index">
-                                    <i class="bi bi-credit-card-fill"></i> Pagos
-                                </a>
-                            </li>
-                        }
-                        
+                        <li class="nav-item">
+                            <a class="nav-link text-light" asp-area="" asp-controller="Payments" asp-action="Index">
+                                <i class="bi bi-credit-card-fill"></i>Pagos&nbsp;&nbsp;/
+                            </a>
+                        </li>                        
                         <li class="nav-item">
                             <a class="nav-link text-light" asp-controller="Download" asp-action="Index">
-                                <i class="bi bi-android2"></i> Android
+                                <i class="bi bi-android2"></i>Android&nbsp;&nbsp;-
+                            </a>
+                        </li> 
+                        <li class="nav-item">
+                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="PEC">
+                                <i class="bi bi-house-door-fill"></i>pec alfa 0.38.1
                             </a>
                         </li>
                     </ul>
