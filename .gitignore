@@ -38,12 +38,10 @@ secrets.json
 **/appsettings.Development.json
 **/appsettings.*.json
 !**/appsettings.json
-!**/appsettings.Production.json
 appsettings.Development.json
 appsettings.Local.json
-appsettings.Staging.json
 
-# Kubernetes secrets (CRÍTICO)
+# Kubernetes secrets (CRÍTICO - CONTRASEÑAS EXPUESTAS)
 **/secrets.yaml
 **/secrets.yml
 k8s/**/secrets.yaml
@@ -55,15 +53,12 @@ k8s-minikube/**/secrets.yml
 *.publishsettings
 *.azurePubxml
 *.pubxml
-*.PublishSettings
 
 # Archivos de certificados y llaves
 *.pfx
 *.p12
 *.key
 *.pem
-*.cer
-*.crt
 *.keystore
 *.jks
 
@@ -71,7 +66,6 @@ k8s-minikube/**/secrets.yml
 .env
 .env.local
 .env.development
-.env.production
 *.env
 
 # ASP.NET Scaffolding
@@ -115,8 +109,6 @@ FodyWeavers.xsd
 *.sln.iml
 
 # ✅ Android/MAUI Build artifacts
-# Comentado para permitir subir APK de distribución si es necesario
-# *.apk
 *.aab
 *.ipa
 *.dSYM
@@ -125,24 +117,9 @@ FodyWeavers.xsd
 # Android signing configuration
 **/DiaryApp.Mobile.csproj.user
 
-# Terraform state files (si usas Terraform)
-*.tfstate
-*.tfstate.*
-.terraform/
-
-# Docker secrets
-docker-compose.override.yml
-.dockerignore
-
 # MacOS
 .DS_Store
 
-# Windows
+# Windowss
 Thumbs.db
-ehthumbs.db
 Desktop.ini
-
-# ===== ARCHIVOS DE EJEMPLO - MANTENER =====
-# Si tienes archivos de ejemplo, agrégalos aquí con !
-# !appsettings.Example.json
-# !secrets.Example.yaml

@@ -24,7 +24,11 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 #endif
 
-		// Configurar la URL base del API - DESARROLLO
+		// ✅ URL del API - Azure Dev/Prod
+		// NOTA: La URL en apps móviles siempre es visible. La seguridad real está en:
+		// 1. Autenticación JWT en el API
+		// 2. Validación de tokens en cada request
+		// 3. Autorización a nivel de controlador/acción
 		const string apiBaseUrl = "https://dev-diaryapp-c2cuanhkf2f6axee.canadacentral-01.azurewebsites.net/api/";
 
 		// Registrar HttpClient para AuthService
@@ -59,9 +63,6 @@ public static class MauiProgram
 		builder.Services.AddTransient<LoginViewModel>();
 		builder.Services.AddTransient<PersonsViewModel>();
 		builder.Services.AddTransient<PersonDetailViewModel>();
-		// COMENTADO: DiaryEntries eliminado del menú
-		// builder.Services.AddTransient<DiaryEntriesViewModel>();
-		// builder.Services.AddTransient<DiaryEntryDetailViewModel>();
 		builder.Services.AddTransient<PaymentsViewModel>();
 		builder.Services.AddTransient<PaymentDetailViewModel>();
 		builder.Services.AddTransient<DiagnosticsViewModel>();
@@ -70,9 +71,6 @@ public static class MauiProgram
 		builder.Services.AddTransient<LoginPage>();
 		builder.Services.AddTransient<PersonsPage>();
 		builder.Services.AddTransient<PersonDetailPage>();
-		// COMENTADO: DiaryEntries eliminado del menú
-		// builder.Services.AddTransient<DiaryEntriesPage>();
-		// builder.Services.AddTransient<DiaryEntryDetailPage>();
 		builder.Services.AddTransient<PaymentsPage>();
 		builder.Services.AddTransient<PaymentDetailPage>();
 		builder.Services.AddTransient<DiagnosticsPage>();
