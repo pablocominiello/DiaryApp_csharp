@@ -7,20 +7,16 @@ namespace DiaryApp.Mobile.ViewModels;
 
 [QueryProperty(nameof(Id), nameof(Id))]
 [QueryProperty(nameof(PersonId), nameof(PersonId))]
-[QueryProperty(nameof(PersonName), nameof(PersonName))]
 public partial class PaymentDetailViewModel : BaseViewModel
 {
     private readonly IApiService _apiService;
-    private readonly IBlobStorageService _blobStorageService;
+    private readonly IAuthService _authService;
 
     [ObservableProperty]
     private int id;
 
     [ObservableProperty]
     private int personId;
-
-    [ObservableProperty]
-    private string? personName;
 
     [ObservableProperty]
     private decimal amount;
@@ -41,54 +37,83 @@ public partial class PaymentDetailViewModel : BaseViewModel
     private string? comprobanteUrl;
 
     [ObservableProperty]
-    private ImageSource? comprobantePreview;
+    private bool isEditing;
 
     [ObservableProperty]
-    private string? comprobanteFileName;
+    private byte[]? pendingImageBytes;
 
     [ObservableProperty]
-    private bool hasComprobante;
+    private string? pendingImageFileName;
 
-    private byte[]? _comprobanteData;
-
-    public PaymentDetailViewModel(IApiService apiService, IBlobStorageService blobStorageService)
+    public PaymentDetailViewModel(IApiService apiService, IAuthService authService)
     {
         _apiService = apiService;
-        _blobStorageService = blobStorageService;
+        _authService = authService;
         Title = "Nuevo Pago";
     }
 
-    partial void OnIdChanged(int value)
+    public async Task InitializeAsync()
     {
-        if (value > 0)
+        // ✅ NUEVO: Verificar si hay una imagen compartida pendiente
+        #if ANDROID
+        await LoadSharedImageIfExistsAsync();
+        #endif
+
+        if (Id > 0)
         {
-            _ = LoadPaymentAsync(value);
+            IsEditing = true;
+            await LoadPaymentAsync(Id);
+        }
+        else
+        {
+            IsEditing = false;
+            Title = "Nuevo Pago";
+            
+            // ✅ Cargar PersonId automáticamente si el usuario está logueado
+            if (PersonId == 0)
+            {
+                var currentPersonId = await _authService.GetPersonIdAsync();
+                if (currentPersonId.HasValue)
+                {
+                    PersonId = currentPersonId.Value;
+                }
+            }
         }
     }
 
-    partial void OnPersonIdChanged(int value)
-    {
-        if (value > 0 && string.IsNullOrEmpty(PersonName))
-        {
-            _ = LoadPersonNameAsync(value);
-        }
-    }
-
-    private async Task LoadPersonNameAsync(int personId)
+    #if ANDROID
+    private async Task LoadSharedImageIfExistsAsync()
     {
         try
         {
-            var person = await _apiService.GetPersonAsync(personId);
-            if (person != null)
+            var imageBytes = await SharedImageHandler.GetSharedImageBytesAsync();
+            
+            if (imageBytes != null && imageBytes.Length > 0)
             {
-                PersonName = person.Nombre;
+                System.Diagnostics.Debug.WriteLine($"✅ Loaded shared image: {imageBytes.Length} bytes");
+                
+                PendingImageBytes = imageBytes;
+                PendingImageFileName = SharedImageHandler.GetSharedImageFileName();
+                
+                // Mostrar preview
+                var base64 = Convert.ToBase64String(imageBytes);
+                ComprobanteUrl = $"data:image/jpeg;base64,{base64}";
+                
+                // Limpiar el handler
+                SharedImageHandler.ClearSharedImage();
+                
+                await Shell.Current.DisplayAlert(
+                    "✅ Imagen Cargada", 
+                    "El comprobante compartido se ha cargado correctamente. Completa los datos del pago.", 
+                    "OK");
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"❌ Error loading person: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"❌ Error loading shared image: {ex.Message}");
         }
     }
+    #endif
 
     private async Task LoadPaymentAsync(int paymentId)
     {
@@ -99,32 +124,24 @@ public partial class PaymentDetailViewModel : BaseViewModel
         {
             IsBusy = true;
             var payment = await _apiService.GetPaymentAsync(paymentId);
+            
             if (payment != null)
             {
                 PersonId = payment.PeoplesId;
-                PersonName = payment.Person?.Nombre;
                 Amount = payment.Amount;
                 Comentary = payment.Comentary;
                 Ano = payment.Ano;
                 Mes = payment.Mes;
                 Fecha = payment.Fecha;
                 ComprobanteUrl = payment.ComprobanteUrl;
-                
-                // Mostrar comprobante existente
-                if (!string.IsNullOrEmpty(ComprobanteUrl))
-                {
-                    ComprobantePreview = ImageSource.FromUri(new Uri(ComprobanteUrl));
-                    ComprobanteFileName = Path.GetFileName(new Uri(ComprobanteUrl).LocalPath);
-                    HasComprobante = true;
-                }
-                
                 Title = "Editar Pago";
             }
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"❌ Error loading payment: {ex.Message}");
-            await Shell.Current.DisplayAlert("Error", $"Error al cargar pago: {ex.Message}", "OK");
+            await Shell.Current.DisplayAlert("Error", "No se pudo cargar el pago", "OK");
+            await Shell.Current.GoToAsync("..");
         }
         finally
         {
@@ -133,45 +150,12 @@ public partial class PaymentDetailViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private async Task SelectImageAsync()
-    {
-        try
-        {
-            var result = await MediaPicker.Default.PickPhotoAsync(new MediaPickerOptions
-            {
-                Title = "Seleccionar comprobante"
-            });
-
-            if (result != null)
-            {
-                // Leer la imagen
-                using var stream = await result.OpenReadAsync();
-                using var memoryStream = new MemoryStream();
-                await stream.CopyToAsync(memoryStream);
-                _comprobanteData = memoryStream.ToArray();
-
-                // Mostrar preview
-                ComprobantePreview = ImageSource.FromStream(() => new MemoryStream(_comprobanteData));
-                ComprobanteFileName = result.FileName;
-                HasComprobante = true;
-
-                System.Diagnostics.Debug.WriteLine($"✅ Imagen seleccionada: {result.FileName}");
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"❌ Error selecting image: {ex.Message}");
-            await Shell.Current.DisplayAlert("Error", $"Error al seleccionar imagen: {ex.Message}", "OK");
-        }
-    }
-
-    [RelayCommand]
     private async Task SaveAsync()
     {
         // Validaciones
-        if (PersonId == 0)
+        if (PersonId <= 0)
         {
-            await Shell.Current.DisplayAlert("Error", "Debe seleccionar una persona", "OK");
+            await Shell.Current.DisplayAlert("Error", "Seleccione una persona válida", "OK");
             return;
         }
 
@@ -181,33 +165,12 @@ public partial class PaymentDetailViewModel : BaseViewModel
             return;
         }
 
-        if (Mes < 1 || Mes > 12)
-        {
-            await Shell.Current.DisplayAlert("Error", "El mes debe estar entre 1 y 12", "OK");
-            return;
-        }
-
         if (IsBusy)
             return;
 
         try
         {
             IsBusy = true;
-
-            // ✅ CORREGIDO: Subir comprobante si hay uno nuevo seleccionado
-            if (_comprobanteData != null && !string.IsNullOrEmpty(ComprobanteFileName))
-            {
-                System.Diagnostics.Debug.WriteLine($"📤 Subiendo comprobante: {ComprobanteFileName}");
-                
-                using var stream = new MemoryStream(_comprobanteData);
-                ComprobanteUrl = await _blobStorageService.UploadImageAsync(
-                    stream, 
-                    ComprobanteFileName, 
-                    "comprobantes"
-                );
-                
-                System.Diagnostics.Debug.WriteLine($"✅ Comprobante subido: {ComprobanteUrl}");
-            }
 
             var payment = new Payment
             {
@@ -221,28 +184,85 @@ public partial class PaymentDetailViewModel : BaseViewModel
                 ComprobanteUrl = ComprobanteUrl
             };
 
-            if (Id == 0)
+            if (IsEditing)
             {
-                await _apiService.CreatePaymentAsync(payment);
-                await Shell.Current.DisplayAlert("Éxito", "Pago creado correctamente", "OK");
+                // Subir imagen si hay una pendiente
+                if (PendingImageBytes != null && !string.IsNullOrEmpty(PendingImageFileName))
+                {
+                    var base64Image = Convert.ToBase64String(PendingImageBytes);
+                    // TODO: Implementar endpoint para subir imagen de comprobante
+                    // payment.ComprobanteUrl = await _apiService.UploadComprobanteAsync(...);
+                    PendingImageBytes = null;
+                    PendingImageFileName = null;
+                }
+
+                await _apiService.UpdatePaymentAsync(payment);
             }
             else
             {
-                await _apiService.UpdatePaymentAsync(payment);
-                await Shell.Current.DisplayAlert("Éxito", "Pago actualizado correctamente", "OK");
+                var createdPayment = await _apiService.CreatePaymentAsync(payment);
+                
+                // Subir imagen después de crear el pago
+                if (createdPayment != null && createdPayment.Id > 0)
+                {
+                    if (PendingImageBytes != null && !string.IsNullOrEmpty(PendingImageFileName))
+                    {
+                        try
+                        {
+                            var base64Image = Convert.ToBase64String(PendingImageBytes);
+                            // TODO: Implementar endpoint para subir imagen de comprobante
+                            // createdPayment.ComprobanteUrl = await _apiService.UploadComprobanteAsync(...);
+                            // await _apiService.UpdatePaymentAsync(createdPayment);
+                            
+                            PendingImageBytes = null;
+                            PendingImageFileName = null;
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"⚠️ Error uploading image: {ex.Message}");
+                        }
+                    }
+                }
             }
 
+            await Shell.Current.DisplayAlert("✅ Éxito", "Pago guardado correctamente", "OK");
             await Shell.Current.GoToAsync("..");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"❌ Error saving payment: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"❌ Stack trace: {ex.StackTrace}");
-            await Shell.Current.DisplayAlert("Error", $"Error al guardar: {ex.Message}", "OK");
+            await Shell.Current.DisplayAlert("Error", $"No se pudo guardar el pago: {ex.Message}", "OK");
         }
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task PickImageAsync()
+    {
+        try
+        {
+            var result = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
+            {
+                Title = "Selecciona un comprobante"
+            });
+
+            if (result != null)
+            {
+                var stream = await result.OpenReadAsync();
+                using var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+                PendingImageBytes = memoryStream.ToArray();
+                PendingImageFileName = result.FileName;
+
+                var base64 = Convert.ToBase64String(PendingImageBytes);
+                ComprobanteUrl = $"data:image/jpeg;base64,{base64}";
+            }
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlert("Error", $"No se pudo cargar la imagen: {ex.Message}", "OK");
         }
     }
 
