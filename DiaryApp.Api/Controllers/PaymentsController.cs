@@ -29,6 +29,7 @@ public class PaymentsController : ControllerBase
         return await query
             .OrderByDescending(p => p.Ano)
             .ThenByDescending(p => p.Mes)
+            .ThenByDescending(p => p.Fecha)
             .ToListAsync();
     }
 
@@ -64,15 +65,8 @@ public class PaymentsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Payment>> CreatePayment(Payment payment)
     {
-        var exists = await _context.Payments
-            .AnyAsync(p => p.PeoplesId == payment.PeoplesId &&
-                          p.Ano == payment.Ano &&
-                          p.Mes == payment.Mes);
-
-        if (exists)
-        {
-            return Conflict("Ya existe un pago para esta persona en este período");
-        }
+        // ✅ ELIMINADO: Validación de duplicados
+        // Ahora se permite múltiples pagos por persona/mes
 
         payment.Fecha = DateTime.Now;
         _context.Payments.Add(payment);
@@ -89,16 +83,7 @@ public class PaymentsController : ControllerBase
             return BadRequest();
         }
 
-        var exists = await _context.Payments
-            .AnyAsync(p => p.PeoplesId == payment.PeoplesId &&
-                          p.Ano == payment.Ano &&
-                          p.Mes == payment.Mes &&
-                          p.Id != payment.Id);
-
-        if (exists)
-        {
-            return Conflict("Ya existe un pago para esta persona en este período");
-        }
+        // ✅ ELIMINADO: Validación de duplicados
 
         _context.Entry(payment).State = EntityState.Modified;
 

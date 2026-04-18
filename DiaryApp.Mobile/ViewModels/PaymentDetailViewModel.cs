@@ -7,15 +7,20 @@ namespace DiaryApp.Mobile.ViewModels;
 
 [QueryProperty(nameof(Id), nameof(Id))]
 [QueryProperty(nameof(PersonId), nameof(PersonId))]
+[QueryProperty(nameof(PersonName), nameof(PersonName))]
 public partial class PaymentDetailViewModel : BaseViewModel
 {
     private readonly IApiService _apiService;
+    private readonly IBlobStorageService _blobStorageService;
 
     [ObservableProperty]
     private int id;
 
     [ObservableProperty]
     private int personId;
+
+    [ObservableProperty]
+    private string? personName;
 
     [ObservableProperty]
     private decimal amount;
@@ -35,10 +40,22 @@ public partial class PaymentDetailViewModel : BaseViewModel
     [ObservableProperty]
     private string? comprobanteUrl;
 
-    public PaymentDetailViewModel(IApiService apiService)
+    [ObservableProperty]
+    private ImageSource? comprobantePreview;
+
+    [ObservableProperty]
+    private string? comprobanteFileName;
+
+    [ObservableProperty]
+    private bool hasComprobante;
+
+    private byte[]? _comprobanteData;
+
+    public PaymentDetailViewModel(IApiService apiService, IBlobStorageService blobStorageService)
     {
         _apiService = apiService;
-        Title = "Detalle Pago";
+        _blobStorageService = blobStorageService;
+        Title = "Nuevo Pago";
     }
 
     partial void OnIdChanged(int value)
@@ -46,6 +63,30 @@ public partial class PaymentDetailViewModel : BaseViewModel
         if (value > 0)
         {
             _ = LoadPaymentAsync(value);
+        }
+    }
+
+    partial void OnPersonIdChanged(int value)
+    {
+        if (value > 0 && string.IsNullOrEmpty(PersonName))
+        {
+            _ = LoadPersonNameAsync(value);
+        }
+    }
+
+    private async Task LoadPersonNameAsync(int personId)
+    {
+        try
+        {
+            var person = await _apiService.GetPersonAsync(personId);
+            if (person != null)
+            {
+                PersonName = person.Nombre;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"❌ Error loading person: {ex.Message}");
         }
     }
 
@@ -61,12 +102,22 @@ public partial class PaymentDetailViewModel : BaseViewModel
             if (payment != null)
             {
                 PersonId = payment.PeoplesId;
+                PersonName = payment.Person?.Nombre;
                 Amount = payment.Amount;
                 Comentary = payment.Comentary;
                 Ano = payment.Ano;
                 Mes = payment.Mes;
                 Fecha = payment.Fecha;
                 ComprobanteUrl = payment.ComprobanteUrl;
+                
+                // Mostrar comprobante existente
+                if (!string.IsNullOrEmpty(ComprobanteUrl))
+                {
+                    ComprobantePreview = ImageSource.FromUri(new Uri(ComprobanteUrl));
+                    ComprobanteFileName = Path.GetFileName(new Uri(ComprobanteUrl).LocalPath);
+                    HasComprobante = true;
+                }
+                
                 Title = "Editar Pago";
             }
         }
@@ -82,11 +133,45 @@ public partial class PaymentDetailViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    private async Task SelectImageAsync()
+    {
+        try
+        {
+            var result = await MediaPicker.Default.PickPhotoAsync(new MediaPickerOptions
+            {
+                Title = "Seleccionar comprobante"
+            });
+
+            if (result != null)
+            {
+                // Leer la imagen
+                using var stream = await result.OpenReadAsync();
+                using var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+                _comprobanteData = memoryStream.ToArray();
+
+                // Mostrar preview
+                ComprobantePreview = ImageSource.FromStream(() => new MemoryStream(_comprobanteData));
+                ComprobanteFileName = result.FileName;
+                HasComprobante = true;
+
+                System.Diagnostics.Debug.WriteLine($"✅ Imagen seleccionada: {result.FileName}");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"❌ Error selecting image: {ex.Message}");
+            await Shell.Current.DisplayAlert("Error", $"Error al seleccionar imagen: {ex.Message}", "OK");
+        }
+    }
+
+    [RelayCommand]
     private async Task SaveAsync()
     {
+        // Validaciones
         if (PersonId == 0)
         {
-            await Shell.Current.DisplayAlert("Error", "Seleccione una persona", "OK");
+            await Shell.Current.DisplayAlert("Error", "Debe seleccionar una persona", "OK");
             return;
         }
 
@@ -96,12 +181,33 @@ public partial class PaymentDetailViewModel : BaseViewModel
             return;
         }
 
+        if (Mes < 1 || Mes > 12)
+        {
+            await Shell.Current.DisplayAlert("Error", "El mes debe estar entre 1 y 12", "OK");
+            return;
+        }
+
         if (IsBusy)
             return;
 
         try
         {
             IsBusy = true;
+
+            // ✅ CORREGIDO: Subir comprobante si hay uno nuevo seleccionado
+            if (_comprobanteData != null && !string.IsNullOrEmpty(ComprobanteFileName))
+            {
+                System.Diagnostics.Debug.WriteLine($"📤 Subiendo comprobante: {ComprobanteFileName}");
+                
+                using var stream = new MemoryStream(_comprobanteData);
+                ComprobanteUrl = await _blobStorageService.UploadImageAsync(
+                    stream, 
+                    ComprobanteFileName, 
+                    "comprobantes"
+                );
+                
+                System.Diagnostics.Debug.WriteLine($"✅ Comprobante subido: {ComprobanteUrl}");
+            }
 
             var payment = new Payment
             {
@@ -131,6 +237,7 @@ public partial class PaymentDetailViewModel : BaseViewModel
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"❌ Error saving payment: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"❌ Stack trace: {ex.StackTrace}");
             await Shell.Current.DisplayAlert("Error", $"Error al guardar: {ex.Message}", "OK");
         }
         finally

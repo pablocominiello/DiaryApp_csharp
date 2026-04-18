@@ -117,14 +117,8 @@ namespace DiaryApp.Controllers
             // Forzar que el pago sea para la persona logueada (seguridad)
             obj.PeoplesId = currentPerson.Id;
 
-            // Validar que no exista un pago duplicado
-            var existingPayment = await _db.Payments
-                .FirstOrDefaultAsync(p => p.PeoplesId == obj.PeoplesId && p.Ano == obj.Ano && p.Mes == obj.Mes);
-    
-            if (existingPayment != null)
-            {
-                ModelState.AddModelError("", $"Ya existe un pago registrado para {obj.Mes}/{obj.Ano}");
-            }
+            // ✅ ELIMINADO: Validación de pago duplicado
+            // Ahora se permiten múltiples pagos por mes
 
             if (ModelState.IsValid)
             {
