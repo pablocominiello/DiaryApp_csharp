@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:DiaryApp.Mobile.ViewModels"
-             xmlns:models="clr-namespace:DiaryApp.Mobile.Models"
+             xmlns:models="clr-namespace:DiaryApp.Shared.Models;assembly=DiaryApp.Shared"
              x:Class="DiaryApp.Mobile.Views.PaymentsPage"
              x:DataType="viewmodels:PaymentsViewModel"
              Title="{Binding Title}">
@@ -39,14 +39,54 @@
                         </SwipeView.RightItems>
 
                         <Frame Margin="0,5" Padding="15" BorderColor="LightGray">
-                            <VerticalStackLayout Spacing="5">
-                                <Label Text="{Binding Person.Nombre}" FontAttributes="Bold" FontSize="16" />
-                                <Label Text="{Binding Ano, StringFormat='Ano: {0}'}" TextColor="Gray" FontSize="14" />
-                                <Label Text="{Binding Mes, StringFormat='Mes: {0}'}" TextColor="Gray" FontSize="14" />
-                                <Label Text="{Binding Fecha, StringFormat='Fecha: {0:dd/MM/yyyy}'}" 
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer 
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:PaymentsViewModel}}, Path=GoToDetailCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
+                            
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                                <!-- Persona -->
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding Person.Nombre, FallbackValue='Sin persona'}" 
+                                       FontAttributes="Bold" 
+                                       FontSize="16" />
+                                
+                                <!-- Monto -->
+                                <Label Grid.Row="0" Grid.Column="1"
+                                       Text="{Binding Amount, StringFormat='${0:N2}'}" 
+                                       FontAttributes="Bold"
+                                       FontSize="18"
+                                       TextColor="Green"
+                                       HorizontalOptions="End" />
+                                
+                                <!-- Año -->
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Text="{Binding Ano, StringFormat='Año: {0}'}" 
+                                       TextColor="Gray" 
+                                       FontSize="14" />
+                                
+                                <!-- Mes -->
+                                <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Text="{Binding Mes, StringFormat='Mes: {0}'}" 
+                                       TextColor="Gray" 
+                                       FontSize="14" />
+                                
+                                <!-- Fecha -->
+                                <Label Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Text="{Binding Fecha, StringFormat='Fecha: {0:dd/MM/yyyy}'}" 
                                        TextColor="DarkGray" 
                                        FontSize="12" />
-                            </VerticalStackLayout>
+                                
+                                <!-- Comentario (opcional) -->
+                                <Label Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Text="{Binding Comentary}"
+                                       TextColor="Gray"
+                                       FontSize="12"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="2"
+                                       IsVisible="{Binding Comentary, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
+                            </Grid>
                         </Frame>
                     </SwipeView>
                 </DataTemplate>

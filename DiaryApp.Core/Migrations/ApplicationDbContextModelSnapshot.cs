@@ -102,7 +102,6 @@ namespace DiaryApp.Core.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PeoplesId", "Ano", "Mes")
-                        .IsUnique()
                         .HasDatabaseName("IX_Payments_PeoplesId_Ano_Mes");
 
                     b.ToTable("Payments");

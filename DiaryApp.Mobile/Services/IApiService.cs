@@ -6,6 +6,7 @@ public interface IApiService
 {
     Task<List<Person>> GetPersonsAsync(string? searchText = null);
     Task<Person?> GetPersonAsync(int id);
+    Task<Person?> GetPersonByUserIdAsync(string userId);
     Task<Person> CreatePersonAsync(Person person);
     Task UpdatePersonAsync(Person person);
     Task DeletePersonAsync(int id);

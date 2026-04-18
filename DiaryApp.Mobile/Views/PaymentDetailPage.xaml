@@ -9,24 +9,84 @@
     <ScrollView Padding="20">
         <VerticalStackLayout Spacing="15">
 
-            <!-- A�o -->
-            <Label Text="A�o:" FontAttributes="Bold" />
-            <Entry Text="{Binding Ano}" Keyboard="Numeric" />
+            <!-- Persona (solo lectura) -->
+            <Label Text="Persona" FontAttributes="Bold" />
+            <Entry Text="{Binding PersonName}" 
+                   IsEnabled="False"
+                   BackgroundColor="LightGray"
+                   TextColor="Gray" />
+
+            <!-- Monto -->
+            <Label Text="Monto" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="5">
+                <Label Text="$" 
+                       FontSize="18" 
+                       FontAttributes="Bold"
+                       VerticalOptions="Center"
+                       Grid.Column="0" />
+                <Entry Text="{Binding Amount}" 
+                       Keyboard="Numeric" 
+                       Placeholder="0.00"
+                       Grid.Column="1" />
+            </Grid>
+
+            <!-- Comentario -->
+            <Label Text="Comentario" FontAttributes="Bold" />
+            <Editor Text="{Binding Comentary}" 
+                    Placeholder="Ingrese un comentario opcional..."
+                    HeightRequest="100"
+                    MaxLength="255" />
+
+            <!-- Año -->
+            <Label Text="Año" FontAttributes="Bold" />
+            <Entry Text="{Binding Ano}" 
+                   Keyboard="Numeric"
+                   Placeholder="2026" />
 
             <!-- Mes -->
-            <Label Text="Mes:" FontAttributes="Bold" />
-            <Entry Text="{Binding Mes}" Keyboard="Numeric" />
+            <Label Text="Mes (1-12)" FontAttributes="Bold" />
+            <Entry Text="{Binding Mes}" 
+                   Keyboard="Numeric"
+                   Placeholder="1-12" />
 
             <!-- Fecha -->
-            <Label Text="Fecha:" FontAttributes="Bold" />
-            <DatePicker Date="{Binding Fecha}" />
+            <Label Text="Fecha" FontAttributes="Bold" />
+            <DatePicker Date="{Binding Fecha}" 
+                        MinimumDate="2020-01-01"
+                        MaximumDate="2030-12-31" />
 
-            <!-- Save Button -->
-            <Button Text="Guardar"
-                    Command="{Binding SaveCommand}"
-                    BackgroundColor="#512BD4"
-                    TextColor="White"
-                    Margin="0,20,0,0" />
+            <!-- Comprobante -->
+            <Label Text="Comprobante" FontAttributes="Bold" />
+            <Button Text="Seleccionar archivo"
+                    Command="{Binding SelectImageCommand}"
+                    BackgroundColor="LightBlue"
+                    TextColor="Black" />
+            
+            <!-- Preview del comprobante -->
+            <Image Source="{Binding ComprobantePreview}"
+                   HeightRequest="200"
+                   Aspect="AspectFit"
+                   IsVisible="{Binding HasComprobante}" />
+            
+            <Label Text="{Binding ComprobanteFileName}"
+                   IsVisible="{Binding HasComprobante}"
+                   FontSize="12"
+                   TextColor="Gray" />
+
+            <!-- Botones de acción -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,20,0,0">
+                <Button Text="Guardar"
+                        Command="{Binding SaveCommand}"
+                        BackgroundColor="#512BD4"
+                        TextColor="White"
+                        Grid.Column="0" />
+                
+                <Button Text="Cancelar"
+                        Command="{Binding CancelCommand}"
+                        BackgroundColor="Gray"
+                        TextColor="White"
+                        Grid.Column="1" />
+            </Grid>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

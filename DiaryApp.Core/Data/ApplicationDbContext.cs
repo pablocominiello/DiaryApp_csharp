@@ -52,10 +52,10 @@ namespace DiaryApp.Core.Data
                 .HasForeignKey(p => p.PeoplesId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Índice único compuesto para evitar duplicados
+            // ✅ CORREGIDO: Índice NO único (permite múltiples pagos por persona/mes)
+            // Este índice mejora el rendimiento de búsquedas pero NO impide duplicados
             modelBuilder.Entity<Payment>()
                 .HasIndex(p => new { p.PeoplesId, p.Ano, p.Mes })
-                .IsUnique()
                 .HasDatabaseName("IX_Payments_PeoplesId_Ano_Mes");
 
             // ✅ Relación OPCIONAL entre Person y IdentityUser

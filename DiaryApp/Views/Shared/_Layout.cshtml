@@ -16,14 +16,31 @@
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - DiaryApp</title>
+    <title>@ViewData["Title"] - 9 de Julio</title>
     
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="9 de Julio" />
+    <meta name="description" content="Aplicación web del Círculo 9 de Julio" />
+    <meta name="theme-color" content="#007bff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="9 de Julio" />
+    
+    <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="~/images/9Julio/9dejulio.ico" />
     <link rel="shortcut icon" type="image/x-icon" href="~/images/9Julio/9dejulio.ico" />
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="~/images/9Julio/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="~/images/9Julio/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="~/images/9Julio/icon-512.png" />
+    
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="~/manifest.json" />
     
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
@@ -63,12 +80,12 @@
                         
                         <li class="nav-item">
                             <a class="nav-link text-light" asp-area="" asp-controller="Payments" asp-action="Index">
-                                <i class="bi bi-credit-card-fill"></i>Pagos&nbsp;&nbsp;/
+                                <i class="bi bi-credit-card-fill"></i>Pagos
                             </a>
                         </li>                        
                         <li class="nav-item">
                             <a class="nav-link text-light" asp-controller="Download" asp-action="Index">
-                                <i class="bi bi-android2"></i>Android&nbsp;&nbsp;-
+                                <i class="bi bi-android2"></i>Android
                             </a>
                         </li> 
                         <li class="nav-item">
@@ -135,7 +152,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - DiaryApp - 
+            &copy; 2025 - 9 de Julio - 
             <span class="badge bg-info">Build: @DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm")</span>
             <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
@@ -143,6 +160,20 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('✅ Service Worker registrado:', registration);
+                }, function(err) {
+                    console.log('❌ Error al registrar Service Worker:', err);
+                });
+            });
+        }
+    </script>
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
