@@ -12,8 +12,8 @@
 
 		<ApplicationTitle>9Julio</ApplicationTitle>
 		<ApplicationId>com.circulo9julio.app</ApplicationId>
-		<ApplicationDisplayVersion>0.0.2</ApplicationDisplayVersion>
-		<ApplicationVersion>2</ApplicationVersion>
+		<ApplicationDisplayVersion>0.0.3</ApplicationDisplayVersion>
+		<ApplicationVersion>3</ApplicationVersion>
 
 		<WindowsPackageType>None</WindowsPackageType>
 

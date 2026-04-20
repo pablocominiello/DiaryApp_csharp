@@ -14,6 +14,8 @@
             <!-- ✅ Registrar convertidores -->
             <converters:IsNullConverter x:Key="IsNullConverter" />
             <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
+            <!-- ✅ ADDED: Alias for compatibility -->
+            <converters:IsNotNullConverter x:Key="IsNotNullOrEmptyConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

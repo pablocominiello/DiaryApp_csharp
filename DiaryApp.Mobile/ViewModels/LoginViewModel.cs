@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DiaryApp.Mobile.Services;
 
@@ -30,7 +30,7 @@ public partial class LoginViewModel : BaseViewModel
         _authService = authService;
         Title = "Iniciar Sesion";
         
-        // Cargar configuraci�n de "Recordar usuario"
+        // Cargar configuración de "Recordar usuario"
         LoadRememberedUserAsync();
     }
 
@@ -42,7 +42,7 @@ public partial class LoginViewModel : BaseViewModel
             var rememberMeValue = await SecureStorage.GetAsync(RememberMeKey);
             RememberMe = rememberMeValue == "true";
 
-            // Si est� marcado, cargar el email guardado
+            // Si está marcado, cargar el email guardado
             if (RememberMe)
             {
                 var savedEmail = await SecureStorage.GetAsync(SavedEmailKey);
@@ -109,6 +109,24 @@ public partial class LoginViewModel : BaseViewModel
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task NavigateToRegisterAsync()
+    {
+        try
+        {
+            // ✅ OPCIÓN 1: Abrir el sitio web de registro en el navegador
+            var webUrl = "https://your-web-app-url.azurewebsites.net/Account/Register";
+            await Browser.Default.OpenAsync(webUrl, BrowserLaunchMode.SystemPreferred);
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlert(
+                "Error",
+                $"No se pudo abrir el navegador: {ex.Message}",
+                "OK");
         }
     }
 
