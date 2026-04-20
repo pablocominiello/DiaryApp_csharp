@@ -7,6 +7,7 @@
         android:allowBackup="true" 
         android:icon="@mipmap/appicon" 
         android:supportsRtl="true"
+        android:label="9Julio"
         android:usesCleartextTraffic="true">
     </application>
     
@@ -15,4 +16,12 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
                      android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    
+    <!-- Queries para poder interactuar con otras apps (Android 11+) -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="image/*" />
+        </intent>
+    </queries>
 </manifest>

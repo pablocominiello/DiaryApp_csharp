@@ -28,6 +28,13 @@ public partial class DiagnosticsViewModel : BaseViewModel
     [ObservableProperty]
     private string connectionMode = string.Empty;
 
+    // ✅ NUEVO: Propiedades para versión
+    [ObservableProperty]
+    private string appVersion = string.Empty;
+
+    [ObservableProperty]
+    private string appBuild = string.Empty;
+
     private readonly IApiService _apiService;
 
     public DiagnosticsViewModel(IApiService apiService)
@@ -44,7 +51,27 @@ public partial class DiagnosticsViewModel : BaseViewModel
 #endif
 
         AppDataDirectory = FileSystem.AppDataDirectory;
+        
+        // ✅ NUEVO: Obtener versión de la app
+        LoadAppVersion();
+        
         LoadDatabaseInfo();
+    }
+
+    // ✅ NUEVO: Método para cargar versión
+    private void LoadAppVersion()
+    {
+        try
+        {
+            AppVersion = AppInfo.Current.VersionString;
+            AppBuild = AppInfo.Current.BuildString;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"⚠️ Error getting app version: {ex.Message}");
+            AppVersion = "N/A";
+            AppBuild = "N/A";
+        }
     }
 
     [RelayCommand]
