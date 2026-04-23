@@ -3,19 +3,42 @@
 <div class="text-center">
     <div class="card">
         <div class="card-header">
-            <h1 class="display-4">Editar Pago</h1>
+            <h1 class="display-4">
+                Editar Pago
+                @if (ViewBag.IsViewingOtherPerson == true)
+                {
+                    <span class="badge bg-warning text-dark ms-2">
+                        <i class="bi bi-eye"></i> Editando pago de otra persona
+                    </span>
+                }
+            </h1>
+            @if (!string.IsNullOrEmpty(ViewBag.PersonName))
+            {
+                <div class="mt-2">
+                    <span class="d-inline-flex align-items-center">
+                        @if (!string.IsNullOrEmpty(ViewBag.PersonImageUrl))
+                        {
+                            <img src="@ViewBag.PersonImageUrl" alt="@ViewBag.PersonName" style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px; margin-right: 10px;" />
+                        }
+                        <span class="text-muted">De: <strong>@ViewBag.PersonName</strong></span>
+                    </span>
+                </div>
+            }
         </div>
         <div class="card-body">
             <form asp-action="Edit" method="post" enctype="multipart/form-data">
                 <input type="hidden" asp-for="Id" />
                 <input type="hidden" asp-for="ComprobanteUrl" />
+                <input type="hidden" asp-for="Ano" />
+                <input type="hidden" asp-for="Mes" />
                 <div asp-validation-summary="All" class="text-bg-danger"></div>
                 
                 <div class="card-group">
                     <label asp-for="PeoplesId" class="form-label"></label>
-                    <select asp-for="PeoplesId" class="form-control" asp-items="ViewBag.Peoples">
+                    <select asp-for="PeoplesId" class="form-control" asp-items="ViewBag.Peoples" disabled>
                         <option value="">-- Seleccione una persona --</option>
                     </select>
+                    <input type="hidden" asp-for="PeoplesId" />
                     <span asp-validation-for="PeoplesId" class="text-bg-danger"></span>
                 </div>
 
@@ -35,20 +58,8 @@
                 </div>
 
                 <div class="card-group">
-                    <label asp-for="Ano" class="form-label"></label>
-                    <input asp-for="Ano" class="form-control" type="number" />
-                    <span asp-validation-for="Ano" class="text-bg-danger"></span>
-                </div>
-
-                <div class="card-group">
-                    <label asp-for="Mes" class="form-label"></label>
-                    <input asp-for="Mes" class="form-control" type="number" min="1" max="12" />
-                    <span asp-validation-for="Mes" class="text-bg-danger"></span>
-                </div>
-
-                <div class="card-group">
                     <label asp-for="Fecha" class="form-label"></label>
-                    <input asp-for="Fecha" class="form-control" type="date" />
+                    <input asp-for="Fecha" class="form-control" type="datetime-local" value="@Model.Fecha.ToString("yyyy-MM-ddTHH:mm")" />
                     <span asp-validation-for="Fecha" class="text-bg-danger"></span>
                 </div>
 

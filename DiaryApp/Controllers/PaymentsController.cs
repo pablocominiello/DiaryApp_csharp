@@ -120,6 +120,12 @@ namespace DiaryApp.Controllers
             // Solo mostrar la persona objetivo en la lista
             ViewBag.Peoples = new SelectList(new[] { targetPerson }, "Id", "Nombre", targetPerson.Id);
             
+            // ✅ NUEVO: Agregar ViewBag para mostrar si está viendo otra persona
+            ViewBag.PersonName = targetPerson.Nombre;
+            ViewBag.PersonImageUrl = targetPerson.ImagenUrl;
+            ViewBag.PersonId = targetPerson.Id;
+            ViewBag.IsViewingOtherPerson = currentPerson.Id != targetPerson.Id;
+            
             // Crear un modelo con valores por defecto
             var payment = new Payment
             {
@@ -189,6 +195,10 @@ namespace DiaryApp.Controllers
                     {
                         ModelState.AddModelError("", $"Error al subir el comprobante: {ex.Message}");
                         ViewBag.Peoples = new SelectList(new[] { targetPerson }, "Id", "Nombre", obj.PeoplesId);
+                        ViewBag.PersonName = targetPerson?.Nombre;
+                        ViewBag.PersonImageUrl = targetPerson?.ImagenUrl;
+                        ViewBag.PersonId = targetPerson?.Id;
+                        ViewBag.IsViewingOtherPerson = currentPerson.Id != targetPerson?.Id;
                         return View(obj);
                     }
                 }
@@ -208,6 +218,10 @@ namespace DiaryApp.Controllers
 
             // ✅ Si llegamos aquí, targetPerson ya está asignado
             ViewBag.Peoples = new SelectList(new[] { targetPerson }, "Id", "Nombre", obj.PeoplesId);
+            ViewBag.PersonName = targetPerson?.Nombre;
+            ViewBag.PersonImageUrl = targetPerson?.ImagenUrl;
+            ViewBag.PersonId = targetPerson?.Id;
+            ViewBag.IsViewingOtherPerson = currentPerson.Id != targetPerson?.Id;
             return View(obj);
         }
 
@@ -253,6 +267,13 @@ namespace DiaryApp.Controllers
 
             var targetPerson = await _db.Peoples.FindAsync(payment.PeoplesId);
             ViewBag.Peoples = new SelectList(new[] { targetPerson }, "Id", "Nombre", payment.PeoplesId);
+            
+            // ✅ NUEVO: Agregar ViewBag para mostrar si está viendo otra persona
+            ViewBag.PersonName = targetPerson?.Nombre;
+            ViewBag.PersonImageUrl = targetPerson?.ImagenUrl;
+            ViewBag.PersonId = targetPerson?.Id;
+            ViewBag.IsViewingOtherPerson = currentPerson.Id != payment.PeoplesId;
+            
             return View(payment);
         }
 
@@ -308,6 +329,10 @@ namespace DiaryApp.Controllers
                         ModelState.AddModelError("", $"Error al actualizar el comprobante: {ex.Message}");
                         var person = await _db.Peoples.FindAsync(obj.PeoplesId);
                         ViewBag.Peoples = new SelectList(new[] { person }, "Id", "Nombre", obj.PeoplesId);
+                        ViewBag.PersonName = person?.Nombre;
+                        ViewBag.PersonImageUrl = person?.ImagenUrl;
+                        ViewBag.PersonId = person?.Id;
+                        ViewBag.IsViewingOtherPerson = currentPerson.Id != obj.PeoplesId;
                         return View(obj);
                     }
                 }
@@ -327,6 +352,10 @@ namespace DiaryApp.Controllers
 
             var targetPerson = await _db.Peoples.FindAsync(obj.PeoplesId);
             ViewBag.Peoples = new SelectList(new[] { targetPerson }, "Id", "Nombre", obj.PeoplesId);
+            ViewBag.PersonName = targetPerson?.Nombre;
+            ViewBag.PersonImageUrl = targetPerson?.ImagenUrl;
+            ViewBag.PersonId = targetPerson?.Id;
+            ViewBag.IsViewingOtherPerson = currentPerson.Id != obj.PeoplesId;
             return View(obj);
         }
 

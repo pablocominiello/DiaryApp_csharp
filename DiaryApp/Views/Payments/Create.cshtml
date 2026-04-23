@@ -3,11 +3,34 @@
 <div class="text-center">
     <div class="card">
         <div class="card-header">
-            <h1 class="display-4">Agregar Pago</h1>
+            <h1 class="display-4">
+                Agregar Pago
+                @if (ViewBag.IsViewingOtherPerson == true)
+                {
+                    <span class="badge bg-warning text-dark ms-2">
+                        <i class="bi bi-eye"></i> Creando pago para otra persona
+                    </span>
+                }
+            </h1>
+            @if (!string.IsNullOrEmpty(ViewBag.PersonName))
+            {
+                <div class="mt-2">
+                    <span class="d-inline-flex align-items-center">
+                        @if (!string.IsNullOrEmpty(ViewBag.PersonImageUrl))
+                        {
+                            <img src="@ViewBag.PersonImageUrl" alt="@ViewBag.PersonName" style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px; margin-right: 10px;" />
+                        }
+                        <span class="text-muted">Para: <strong>@ViewBag.PersonName</strong></span>
+                    </span>
+                </div>
+            }
         </div>
         <div class="card-body">
             <form asp-action="Create" method="post" enctype="multipart/form-data">
                 <div asp-validation-summary="All" class="text-bg-danger"></div>
+                
+                <input type="hidden" asp-for="Ano" />
+                <input type="hidden" asp-for="Mes" />
                 
                 <div class="card-group">
                     <label asp-for="PeoplesId" class="form-label">Persona</label>
@@ -34,20 +57,8 @@
                 </div>
 
                 <div class="card-group">
-                    <label asp-for="Ano" class="form-label"></label>
-                    <input asp-for="Ano" class="form-control" type="number" />
-                    <span asp-validation-for="Ano" class="text-bg-danger"></span>
-                </div>
-
-                <div class="card-group">
-                    <label asp-for="Mes" class="form-label"></label>
-                    <input asp-for="Mes" class="form-control" type="number" min="1" max="12" />
-                    <span asp-validation-for="Mes" class="text-bg-danger"></span>
-                </div>
-
-                <div class="card-group">
                     <label asp-for="Fecha" class="form-label"></label>
-                    <input asp-for="Fecha" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <input asp-for="Fecha" class="form-control" type="datetime-local" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
                     <span asp-validation-for="Fecha" class="text-bg-danger"></span>
                 </div>
 
@@ -58,7 +69,7 @@
 
                 <div class="d-flex justify-content-between mt-3"></div>
                 <button type="submit" class="btn btn-primary">Crear</button>
-                <a asp-controller="Payments" asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                <a asp-controller="Payments" asp-action="Index" asp-route-personId="@ViewBag.PersonId" class="btn btn-secondary">Cancelar</a>
             </form>
         </div>
     </div>
