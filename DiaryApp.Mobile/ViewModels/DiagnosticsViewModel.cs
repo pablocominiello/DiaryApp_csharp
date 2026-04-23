@@ -1,12 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DiaryApp.Mobile.Services;
+using System.Net.Http;
 
 namespace DiaryApp.Mobile.ViewModels;
 
 public partial class DiagnosticsViewModel : BaseViewModel
 {
-    // ✅ SOLO estas propiedades
     [ObservableProperty]
     private string apiUrl = string.Empty;
 
@@ -28,7 +28,6 @@ public partial class DiagnosticsViewModel : BaseViewModel
     [ObservableProperty]
     private string connectionMode = string.Empty;
 
-    // ✅ NUEVO: Propiedades para versión
     [ObservableProperty]
     private string appVersion = string.Empty;
 
@@ -36,29 +35,37 @@ public partial class DiagnosticsViewModel : BaseViewModel
     private string appBuild = string.Empty;
 
     private readonly IApiService _apiService;
+    private readonly HttpClient _httpClient;
 
-    public DiagnosticsViewModel(IApiService apiService)
+    public DiagnosticsViewModel(IApiService apiService, HttpClient httpClient)
     {
         _apiService = apiService;
+        _httpClient = httpClient;
         Title = "Diagnóstico";
         
-#if DEBUG
-        ApiUrl = "https://10.0.2.2:7001/api";
-        ConnectionMode = "🔵 DEBUG - Servidor Local";
-#else
-        ApiUrl = "https://dev-diaryapp-c2cuanhkf2f6axee.canadacentral-01.azurewebsites.net/api";
-        ConnectionMode = "🟢 RELEASE - Azure Cloud";
-#endif
+        // ✅ NUEVO: Obtener la URL real del HttpClient inyectado
+        ApiUrl = _httpClient.BaseAddress?.ToString() ?? "No configurada";
+        
+        // ✅ Determinar el modo de conexión basado en la URL real
+        if (ApiUrl.Contains("localhost") || ApiUrl.Contains("10.0.2.2") || ApiUrl.Contains("127.0.0.1"))
+        {
+            ConnectionMode = "🔵 DEBUG - Servidor Local";
+        }
+        else if (ApiUrl.Contains("azure") || ApiUrl.Contains("canadacentral"))
+        {
+            ConnectionMode = "🟢 RELEASE - Azure Cloud";
+        }
+        else
+        {
+            ConnectionMode = "⚪ Desconocido";
+        }
 
         AppDataDirectory = FileSystem.AppDataDirectory;
         
-        // ✅ NUEVO: Obtener versión de la app
         LoadAppVersion();
-        
         LoadDatabaseInfo();
     }
 
-    // ✅ NUEVO: Método para cargar versión
     private void LoadAppVersion()
     {
         try

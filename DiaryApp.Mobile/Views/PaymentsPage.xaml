@@ -5,9 +5,10 @@
              xmlns:models="clr-namespace:DiaryApp.Shared.Models;assembly=DiaryApp.Shared"
              x:Class="DiaryApp.Mobile.Views.PaymentsPage"
              x:DataType="viewmodels:PaymentsViewModel"
-             Title="{Binding Title}">
+             Title="{Binding Title}"
+             BackgroundColor="{StaticResource Gray100}">
 
-    <Grid RowDefinitions="Auto,*" Padding="10">
+    <Grid RowDefinitions="Auto,*" Padding=" 10">
         <!-- Add Button -->
         <Button Grid.Row="0"
                 Text="+ Nuevo Pago"

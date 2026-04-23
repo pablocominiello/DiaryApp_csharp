@@ -276,10 +276,21 @@ namespace DiaryApp.Controllers
             return View(person);
         }
 
-        // GET: /Persons/Create - Crear persona sin usuario
+        // GET: /Persons/Create - Crear persona sin usuario (SOLO ADMINS)
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            // ✅ SEGURIDAD: Validar que el usuario sea admin
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+            
+            if (currentPerson == null || !currentPerson.Admin)
+            {
+                _logger.LogWarning("Usuario no autorizado intentó acceder a Create. UserId: {UserId}", userId);
+                TempData["Error"] = "No tienes permisos para realizar esta acción.";
+                return RedirectToAction("List");
+            }
+
             var person = new Person
             {
                 Born = DateTime.Now.AddYears(-18)
@@ -287,11 +298,22 @@ namespace DiaryApp.Controllers
             return View(person);
         }
 
-        // POST: /Persons/Create
+        // POST: /Persons/Create (SOLO ADMINS)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Person person, IFormFile? imagenFile)
         {
+            // ✅ SEGURIDAD: Validar que el usuario sea admin
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+            
+            if (currentPerson == null || !currentPerson.Admin)
+            {
+                _logger.LogWarning("Usuario no autorizado intentó crear persona. UserId: {UserId}", userId);
+                TempData["Error"] = "No tienes permisos para realizar esta acción.";
+                return RedirectToAction("List");
+            }
+
             // Validar nombre
             if (person.Nombre.Length < 3)
             {
@@ -318,6 +340,7 @@ namespace DiaryApp.Controllers
                     _db.Peoples.Add(person);
                     await _db.SaveChangesAsync();
                     
+                    _logger.LogInformation("Admin {AdminId} creó persona {PersonId}", currentPerson.Id, person.Id);
                     TempData["SuccessMessage"] = "Persona creada exitosamente";
                     return RedirectToAction("List");
                 }
@@ -331,25 +354,57 @@ namespace DiaryApp.Controllers
             return View(person);
         }
 
-        // GET: /Persons/EditPerson/5 - Editar persona específica (con o sin usuario)
+        // GET: /Persons/EditPerson/5 - Editar persona específica (SOLO ADMINS)
         [HttpGet]
         public async Task<IActionResult> EditPerson(int id)
         {
+            // ✅ SEGURIDAD: Validar que el usuario sea admin
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+            
+            if (currentPerson == null || !currentPerson.Admin)
+            {
+                _logger.LogWarning("Usuario no autorizado intentó editar persona {PersonId}. UserId: {UserId}", id, userId);
+                TempData["Error"] = "No tienes permisos para realizar esta acción.";
+                return RedirectToAction("List");
+            }
+
             var person = await _db.Peoples.FindAsync(id);
 
             if (person == null)
             {
-                return NotFound();
+                TempData["Error"] = "Persona no encontrada.";
+                return RedirectToAction("List");
             }
 
             return View(person);
         }
 
-        // POST: /Persons/EditPerson/5
+        // POST: /Persons/EditPerson/5 (SOLO ADMINS)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditPerson(Person person, IFormFile? imagenFile)
         {
+            // ✅ SEGURIDAD: Validar que el usuario sea admin
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+            
+            if (currentPerson == null || !currentPerson.Admin)
+            {
+                _logger.LogWarning("Usuario no autorizado intentó actualizar persona {PersonId}. UserId: {UserId}", person.Id, userId);
+                TempData["Error"] = "No tienes permisos para realizar esta acción.";
+                return RedirectToAction("List");
+            }
+
+            // ✅ SEGURIDAD ADICIONAL: Verificar que la persona a editar existe en la BD
+            var existingPerson = await _db.Peoples.AsNoTracking().FirstOrDefaultAsync(p => p.Id == person.Id);
+            if (existingPerson == null)
+            {
+                _logger.LogWarning("Intento de actualizar persona inexistente {PersonId}", person.Id);
+                TempData["Error"] = "La persona especificada no existe.";
+                return RedirectToAction("List");
+            }
+
             if (person.Nombre.Length < 3)
             {
                 ModelState.AddModelError("Nombre", "El nombre debe tener al menos 3 caracteres");
@@ -379,6 +434,7 @@ namespace DiaryApp.Controllers
                     _db.Peoples.Update(person);
                     await _db.SaveChangesAsync();
                     
+                    _logger.LogInformation("Admin {AdminId} actualizó persona {PersonId}", currentPerson.Id, person.Id);
                     TempData["SuccessMessage"] = "Persona actualizada exitosamente";
                     return RedirectToAction("List");
                 }
@@ -392,17 +448,37 @@ namespace DiaryApp.Controllers
             return View(person);
         }
 
-        // POST: /Persons/Delete/5
+        // POST: /Persons/DeletePerson/5 (SOLO ADMINS)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePerson(int id)
         {
+            // ✅ SEGURIDAD: Validar que el usuario sea admin
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.UserId == userId);
+            
+            if (currentPerson == null || !currentPerson.Admin)
+            {
+                _logger.LogWarning("Usuario no autorizado intentó eliminar persona {PersonId}. UserId: {UserId}", id, userId);
+                TempData["Error"] = "No tienes permisos para realizar esta acción.";
+                return RedirectToAction("List");
+            }
+
             try
             {
                 var person = await _db.Peoples.FindAsync(id);
                 if (person == null)
                 {
-                    return NotFound();
+                    TempData["Error"] = "Persona no encontrada.";
+                    return RedirectToAction("List");
+                }
+
+                // ✅ SEGURIDAD: Prevenir que el admin se elimine a sí mismo
+                if (person.Id == currentPerson.Id)
+                {
+                    _logger.LogWarning("Admin {AdminId} intentó eliminarse a sí mismo", currentPerson.Id);
+                    TempData["Error"] = "No puedes eliminarte a ti mismo.";
+                    return RedirectToAction("List");
                 }
 
                 // Eliminar imagen si existe
@@ -421,6 +497,7 @@ namespace DiaryApp.Controllers
                 _db.Peoples.Remove(person);
                 await _db.SaveChangesAsync();
                 
+                _logger.LogInformation("Admin {AdminId} eliminó persona {PersonId}", currentPerson.Id, id);
                 TempData["SuccessMessage"] = "Persona eliminada exitosamente";
                 return RedirectToAction("List");
             }
