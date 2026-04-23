@@ -20,6 +20,21 @@
                 </div>
 
                 <div class="card-group">
+                    <label asp-for="Amount" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input asp-for="Amount" class="form-control" type="number" step="0.01" min="0.01" placeholder="0.00" />
+                    </div>
+                    <span asp-validation-for="Amount" class="text-bg-danger"></span>
+                </div>
+
+                <div class="card-group">
+                    <label asp-for="Comentary" class="form-label"></label>
+                    <textarea asp-for="Comentary" class="form-control" rows="3" maxlength="255" placeholder="Ingrese un comentario opcional..."></textarea>
+                    <span asp-validation-for="Comentary" class="text-bg-danger"></span>
+                </div>
+
+                <div class="card-group">
                     <label asp-for="Ano" class="form-label"></label>
                     <input asp-for="Ano" class="form-control" type="number" />
                     <span asp-validation-for="Ano" class="text-bg-danger"></span>
