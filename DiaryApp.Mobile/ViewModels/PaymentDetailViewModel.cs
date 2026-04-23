@@ -22,16 +22,18 @@ public partial class PaymentDetailViewModel : BaseViewModel
     private decimal amount;
 
     [ObservableProperty]
-    private string? comentary;
+    private string? comentary = string.Empty;
 
-    [ObservableProperty]
-    private int ano = DateTime.Now.Year;
-
-    [ObservableProperty]
-    private int mes = DateTime.Now.Month;
+    // ✅ OCULTOS: Se calculan automáticamente desde Fecha
+    private int ano => Fecha.Year;
+    private int mes => Fecha.Month;
 
     [ObservableProperty]
     private DateTime fecha = DateTime.Now;
+
+    // ✅ NUEVO: TimeSpan para el TimePicker
+    [ObservableProperty]
+    private TimeSpan fechaTime = DateTime.Now.TimeOfDay;
 
     [ObservableProperty]
     private string? comprobanteUrl;
@@ -54,7 +56,7 @@ public partial class PaymentDetailViewModel : BaseViewModel
 
     public async Task InitializeAsync()
     {
-        // ✅ NUEVO: Verificar si hay una imagen compartida pendiente
+        // ✅ Verificar si hay una imagen compartida pendiente
         #if ANDROID
         await LoadSharedImageIfExistsAsync();
         #endif
@@ -130,9 +132,8 @@ public partial class PaymentDetailViewModel : BaseViewModel
                 PersonId = payment.PeoplesId;
                 Amount = payment.Amount;
                 Comentary = payment.Comentary;
-                Ano = payment.Ano;
-                Mes = payment.Mes;
                 Fecha = payment.Fecha;
+                FechaTime = payment.Fecha.TimeOfDay; // ✅ Extraer hora
                 ComprobanteUrl = payment.ComprobanteUrl;
                 Title = "Editar Pago";
             }
@@ -172,26 +173,27 @@ public partial class PaymentDetailViewModel : BaseViewModel
         {
             IsBusy = true;
 
+            // ✅ Combinar fecha con hora
+            var fechaCompleta = Fecha.Date + FechaTime;
+
             var payment = new Payment
             {
                 Id = Id,
                 PeoplesId = PersonId,
                 Amount = Amount,
                 Comentary = Comentary,
-                Ano = Ano,
-                Mes = Mes,
-                Fecha = Fecha,
+                Ano = fechaCompleta.Year,    // ✅ Auto-calculado
+                Mes = fechaCompleta.Month,   // ✅ Auto-calculado
+                Fecha = fechaCompleta,       // ✅ Fecha + Hora
                 ComprobanteUrl = ComprobanteUrl
             };
 
             if (IsEditing)
             {
-                // Subir imagen si hay una pendiente
                 if (PendingImageBytes != null && !string.IsNullOrEmpty(PendingImageFileName))
                 {
                     var base64Image = Convert.ToBase64String(PendingImageBytes);
                     // TODO: Implementar endpoint para subir imagen de comprobante
-                    // payment.ComprobanteUrl = await _apiService.UploadComprobanteAsync(...);
                     PendingImageBytes = null;
                     PendingImageFileName = null;
                 }
@@ -202,7 +204,6 @@ public partial class PaymentDetailViewModel : BaseViewModel
             {
                 var createdPayment = await _apiService.CreatePaymentAsync(payment);
                 
-                // Subir imagen después de crear el pago
                 if (createdPayment != null && createdPayment.Id > 0)
                 {
                     if (PendingImageBytes != null && !string.IsNullOrEmpty(PendingImageFileName))
@@ -211,8 +212,6 @@ public partial class PaymentDetailViewModel : BaseViewModel
                         {
                             var base64Image = Convert.ToBase64String(PendingImageBytes);
                             // TODO: Implementar endpoint para subir imagen de comprobante
-                            // createdPayment.ComprobanteUrl = await _apiService.UploadComprobanteAsync(...);
-                            // await _apiService.UpdatePaymentAsync(createdPayment);
                             
                             PendingImageBytes = null;
                             PendingImageFileName = null;
