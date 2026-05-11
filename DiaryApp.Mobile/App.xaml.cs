@@ -57,8 +57,16 @@ public partial class App : Application
         try
         {
 #if DEBUG
-            await _authService.LogoutAsync();
-            System.Diagnostics.Debug.WriteLine("DEBUG: Sesión limpiada automáticamente");
+            // ✅ NUEVO: No hacer logout si hay un share intent activo
+            if (!ShareIntentHandler.HasSharedIntent())
+            {
+                await _authService.LogoutAsync();
+                System.Diagnostics.Debug.WriteLine("DEBUG: Sesión limpiada automáticamente");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("DEBUG: Sesión MANTENIDA por share intent");
+            }
 #endif
             
             await CheckAuthenticationAsync();
@@ -80,6 +88,14 @@ public partial class App : Application
             var isAuthenticated = await _authService.IsAuthenticatedAsync();
             
             System.Diagnostics.Debug.WriteLine($"IsAuthenticated: {isAuthenticated}");
+            
+            // ✅ NUEVO: Si hay un share intent, ir a payments directamente
+            if (ShareIntentHandler.HasSharedIntent())
+            {
+                System.Diagnostics.Debug.WriteLine("🚀 Share intent detectado - navegando a payments");
+                await Shell.Current.GoToAsync("///payments");
+                return; // MainActivity se encargará de la navegación al detalle
+            }
             
             if (isAuthenticated)
             {

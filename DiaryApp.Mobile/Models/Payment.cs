@@ -28,6 +28,17 @@ public class Payment
     [Display(Name = "Comprobante")]
     public string? ComprobanteUrl { get; set; }
 
+    [StringLength(255, ErrorMessage = "El comentario no puede exceder 255 caracteres")]
+    [Display(Name = "Comentario")]
+    public string? Comentary { get; set; }
+
+    [Required(ErrorMessage = "Ingrese el monto")]
+    [Range(0.01, 999999.99, ErrorMessage = "El monto debe ser mayor a 0")]
+    [Column(TypeName = "decimal(18,2)")]
+    [Display(Name = "Monto")]
+    [DataType(DataType.Currency)]
+    public decimal Amount { get; set; }
+
     [ForeignKey("PeoplesId")]
     public Person? Person { get; set; }
 }

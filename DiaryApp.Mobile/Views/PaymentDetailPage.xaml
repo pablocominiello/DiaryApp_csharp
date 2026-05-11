@@ -4,89 +4,200 @@
              xmlns:viewmodels="clr-namespace:DiaryApp.Mobile.ViewModels"
              x:Class="DiaryApp.Mobile.Views.PaymentDetailPage"
              x:DataType="viewmodels:PaymentDetailViewModel"
-             Title="{Binding Title}">
+             Title="{Binding Title}"
+             BackgroundColor="#375A7F">
 
-    <ScrollView Padding="20">
-        <VerticalStackLayout Spacing="15">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
 
-            <!-- Persona (solo lectura) -->
-            <Label Text="Persona" FontAttributes="Bold" />
-            <Entry Text="{Binding PersonName}" 
-                   IsEnabled="False"
-                   BackgroundColor="LightGray"
-                   TextColor="Gray" />
+            <!-- Header Info -->
+            <Frame BackgroundColor="{StaticResource Gray900}"
+                   CornerRadius="12"
+                   Padding="15"
+                   HasShadow="True">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="💰 Información del Pago"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Frame>
 
             <!-- Monto -->
-            <Label Text="Monto" FontAttributes="Bold" />
-            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="5">
-                <Label Text="$" 
-                       FontSize="18" 
-                       FontAttributes="Bold"
-                       VerticalOptions="Center"
-                       Grid.Column="0" />
-                <Entry Text="{Binding Amount}" 
-                       Keyboard="Numeric" 
-                       Placeholder="0.00"
-                       Grid.Column="1" />
-            </Grid>
+            <Frame BackgroundColor="{StaticResource Gray900}"
+                   CornerRadius="12"
+                   Padding="15"
+                   HasShadow="True">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="💵 Monto *" 
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           FontSize="14" />
+                    <Frame BackgroundColor="#2C3E50"
+                           Padding="0"
+                           CornerRadius="8"
+                           HasShadow="False">
+                        <Grid ColumnDefinitions="50,*" ColumnSpacing="0">
+                            <Label Text="$" 
+                                   FontSize="24" 
+                                   FontAttributes="Bold"
+                                   TextColor="White"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Center"
+                                   Grid.Column="0" />
+                            <Entry Text="{Binding Amount}" 
+                                   Keyboard="Numeric" 
+                                   Placeholder="0.00"
+                                   PlaceholderColor="Gray"
+                                   TextColor="White"
+                                   BackgroundColor="Transparent"
+                                   FontSize="18"
+                                   Grid.Column="1"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </Frame>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- ✅ MODIFICADO: Fecha con TimePicker -->
+            <Frame BackgroundColor="{StaticResource Gray900}"
+                   CornerRadius="12"
+                   Padding="15"
+                   HasShadow="True">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="🕐 Fecha y Hora *" 
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           FontSize="14" />
+                    
+                    <!-- DatePicker -->
+                    <Frame BackgroundColor="#2C3E50"
+                           Padding="10"
+                           CornerRadius="8"
+                           HasShadow="False">
+                        <DatePicker Date="{Binding Fecha}" 
+                                    MinimumDate="2020-01-01"
+                                    MaximumDate="2030-12-31"
+                                    TextColor="White"
+                                    BackgroundColor="Transparent"
+                                    Format="dd/MM/yyyy" />
+                    </Frame>
+                    
+                    <!-- TimePicker -->
+                    <Frame BackgroundColor="#2C3E50"
+                           Padding="10"
+                           CornerRadius="8"
+                           HasShadow="False">
+                        <TimePicker Time="{Binding FechaTime}"
+                                    TextColor="White"
+                                    BackgroundColor="Transparent"
+                                    Format="HH:mm" />
+                    </Frame>
+                    
+                    <Label Text="Selecciona la fecha y hora del pago"
+                           FontSize="11"
+                           TextColor="LightGray"
+                           FontAttributes="Italic" />
+                </VerticalStackLayout>
+            </Frame>
 
             <!-- Comentario -->
-            <Label Text="Comentario" FontAttributes="Bold" />
-            <Editor Text="{Binding Comentary}" 
-                    Placeholder="Ingrese un comentario opcional..."
-                    HeightRequest="100"
-                    MaxLength="255" />
-
-            <!-- Año -->
-            <Label Text="Año" FontAttributes="Bold" />
-            <Entry Text="{Binding Ano}" 
-                   Keyboard="Numeric"
-                   Placeholder="2026" />
-
-            <!-- Mes -->
-            <Label Text="Mes (1-12)" FontAttributes="Bold" />
-            <Entry Text="{Binding Mes}" 
-                   Keyboard="Numeric"
-                   Placeholder="1-12" />
-
-            <!-- Fecha -->
-            <Label Text="Fecha" FontAttributes="Bold" />
-            <DatePicker Date="{Binding Fecha}" 
-                        MinimumDate="2020-01-01"
-                        MaximumDate="2030-12-31" />
+            <Frame BackgroundColor="{StaticResource Gray900}"
+                   CornerRadius="12"
+                   Padding="15"
+                   HasShadow="True">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="💬 Comentario (opcional)" 
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           FontSize="14" />
+                    <Frame BackgroundColor="#2C3E50"
+                           Padding="10"
+                           CornerRadius="8"
+                           HasShadow="False">
+                        <Editor Text="{Binding Comentary}" 
+                                Placeholder="Ingrese un comentario opcional..."
+                                PlaceholderColor="Gray"
+                                TextColor="White"
+                                BackgroundColor="Transparent"
+                                HeightRequest="100"
+                                MaxLength="255"
+                                AutoSize="TextChanges" />
+                    </Frame>
+                    <Label Text="{Binding Comentary.Length, StringFormat='{0}/255 caracteres'}"
+                           FontSize="11"
+                           TextColor="LightGray"
+                           HorizontalOptions="End" />
+                </VerticalStackLayout>
+            </Frame>
 
             <!-- Comprobante -->
-            <Label Text="Comprobante" FontAttributes="Bold" />
-            <Button Text="Seleccionar archivo"
-                    Command="{Binding SelectImageCommand}"
-                    BackgroundColor="LightBlue"
-                    TextColor="Black" />
-            
-            <!-- Preview del comprobante -->
-            <Image Source="{Binding ComprobantePreview}"
-                   HeightRequest="200"
-                   Aspect="AspectFit"
-                   IsVisible="{Binding HasComprobante}" />
-            
-            <Label Text="{Binding ComprobanteFileName}"
-                   IsVisible="{Binding HasComprobante}"
-                   FontSize="12"
-                   TextColor="Gray" />
+            <Frame BackgroundColor="{StaticResource Gray900}"
+                   CornerRadius="12"
+                   Padding="15"
+                   HasShadow="True">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="📎 Comprobante (opcional)" 
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           FontSize="14" />
+                    
+                    <Button Text="📷 Seleccionar Imagen"
+                            Command="{Binding PickImageCommand}"
+                            BackgroundColor="#375A7F"
+                            TextColor="White"
+                            CornerRadius="8"
+                            HeightRequest="45" />
+                    
+                    <!-- Preview del comprobante -->
+                    <Frame IsVisible="{Binding ComprobanteUrl, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                           BackgroundColor="#2C3E50"
+                           Padding="10"
+                           CornerRadius="8"
+                           HasShadow="False">
+                        <VerticalStackLayout Spacing="10">
+                            <Image Source="{Binding ComprobanteUrl}"
+                                   HeightRequest="200"
+                                   Aspect="AspectFit" />
+                            <Label Text="{Binding PendingImageFileName, FallbackValue='Imagen cargada'}"
+                                   FontSize="12"
+                                   TextColor="LightGray"
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
+            </Frame>
 
             <!-- Botones de acción -->
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,20,0,0">
-                <Button Text="Guardar"
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,10,0,20">
+                <Button Text="✅ Guardar"
                         Command="{Binding SaveCommand}"
-                        BackgroundColor="#512BD4"
+                        BackgroundColor="#4CAF50"
                         TextColor="White"
+                        CornerRadius="25"
+                        HeightRequest="50"
+                        FontSize="16"
+                        FontAttributes="Bold"
                         Grid.Column="0" />
                 
-                <Button Text="Cancelar"
+                <Button Text="❌ Cancelar"
                         Command="{Binding CancelCommand}"
-                        BackgroundColor="Gray"
+                        BackgroundColor="#E53935"
                         TextColor="White"
+                        CornerRadius="25"
+                        HeightRequest="50"
+                        FontSize="16"
+                        FontAttributes="Bold"
                         Grid.Column="1" />
             </Grid>
+
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                              IsVisible="{Binding IsBusy}"
+                              Color="White"
+                              HeightRequest="50" />
+
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

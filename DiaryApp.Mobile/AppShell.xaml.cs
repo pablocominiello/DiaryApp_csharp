@@ -17,6 +17,9 @@ public partial class AppShell : Shell
 			Routing.RegisterRoute(nameof(PaymentDetailPage), typeof(PaymentDetailPage));
 			Routing.RegisterRoute(nameof(DiagnosticsPage), typeof(DiagnosticsPage));
 			
+			// ✅ NUEVO: Registrar ruta para crear pago desde share
+			Routing.RegisterRoute("payments/new", typeof(PaymentDetailPage));
+			
 			System.Diagnostics.Debug.WriteLine("All routes registered successfully");
 		}
 		catch (Exception ex)

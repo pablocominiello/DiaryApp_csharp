@@ -21,8 +21,8 @@ namespace DiaryApp.Controllers
             _blobStorageService = blobStorageService;
         }
 
-        // GET: Payments
-        public async Task<ActionResult> Index()
+        // GET: Payments?personId=5 (opcional para admins)
+        public async Task<ActionResult> Index(int? personId)
         {
             // Obtener el ID del usuario logueado
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -41,14 +41,36 @@ namespace DiaryApp.Controllers
                 return RedirectToAction("Index", "Persons");
             }
 
-            // Filtrar solo los pagos de la persona logueada
+            // ✅ CORREGIDO: Determinar qué persona consultar según si es admin y hay personId
+            Person targetPerson;
+            
+            if (currentPerson.Admin && personId.HasValue && personId.Value != currentPerson.Id)
+            {
+                // Admin consultando pagos de otra persona
+                targetPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.Id == personId.Value);
+                
+                if (targetPerson == null)
+                {
+                    TempData["Error"] = "No se encontró la persona especificada.";
+                    return RedirectToAction("Index");
+                }
+            }
+            else
+            {
+                // Usuario normal o admin sin personId: ver sus propios pagos
+                targetPerson = currentPerson;
+            }
+
+            // ✅ Filtrar pagos de la persona objetivo (no siempre currentPerson)
             var paymentsQuery = _db.Payments
                 .Include(p => p.Person)
-                .Where(p => p.PeoplesId == currentPerson.Id);
+                .Where(p => p.PeoplesId == targetPerson.Id);
 
-            ViewBag.PersonName = currentPerson.Nombre;
-            ViewBag.PersonImageUrl = currentPerson.ImagenUrl;
-            ViewBag.PersonId = currentPerson.Id;
+            ViewBag.PersonName = targetPerson.Nombre;
+            ViewBag.PersonImageUrl = targetPerson.ImagenUrl;
+            ViewBag.PersonId = targetPerson.Id;
+            ViewBag.IsAdmin = currentPerson.Admin;
+            ViewBag.IsViewingOtherPerson = currentPerson.Id != targetPerson.Id;
 
             List<Payment> paymentList = await paymentsQuery
                 .OrderByDescending(p => p.Fecha)
@@ -57,8 +79,8 @@ namespace DiaryApp.Controllers
             return View(paymentList);
         }
 
-        // GET: Payments/Create
-        public async Task<ActionResult> Create()
+        // GET: Payments/Create?personId=5 (opcional para admins)
+        public async Task<ActionResult> Create(int? personId)
         {
             // Obtener el ID del usuario logueado
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -77,15 +99,39 @@ namespace DiaryApp.Controllers
                 return RedirectToAction("Index", "Persons");
             }
 
-            // Solo mostrar la persona logueada en la lista (aunque no se podrá cambiar)
-            ViewBag.Peoples = new SelectList(new[] { currentPerson }, "Id", "Nombre", currentPerson.Id);
+            // ✅ NUEVO: Determinar para quién crear el pago
+            Person targetPerson;
+            
+            if (currentPerson.Admin && personId.HasValue)
+            {
+                targetPerson = await _db.Peoples.FirstOrDefaultAsync(p => p.Id == personId.Value);
+                
+                if (targetPerson == null)
+                {
+                    TempData["Error"] = "No se encontró la persona especificada.";
+                    return RedirectToAction("Index");
+                }
+            }
+            else
+            {
+                targetPerson = currentPerson;
+            }
+
+            // Solo mostrar la persona objetivo en la lista
+            ViewBag.Peoples = new SelectList(new[] { targetPerson }, "Id", "Nombre", targetPerson.Id);
+            
+            // ✅ NUEVO: Agregar ViewBag para mostrar si está viendo otra persona
+            ViewBag.PersonName = targetPerson.Nombre;
+            ViewBag.PersonImageUrl = targetPerson.ImagenUrl;
+            ViewBag.PersonId = targetPerson.Id;
+            ViewBag.IsViewingOtherPerson = currentPerson.Id != targetPerson.Id;
             
             // Crear un modelo con valores por defecto
             var payment = new Payment
             {
-                PeoplesId = currentPerson.Id,
+                PeoplesId = targetPerson.Id,
                 Ano = DateTime.Now.Year,
-                Mes = DateTime.Now.Month, // ✅ Agregar el mes actual
+                Mes = DateTime.Now.Month,
                 Fecha = DateTime.Now
             };
             
@@ -114,11 +160,26 @@ namespace DiaryApp.Controllers
                 return RedirectToAction("Index", "Persons");
             }
 
-            // Forzar que el pago sea para la persona logueada (seguridad)
-            obj.PeoplesId = currentPerson.Id;
+            // ✅ CORREGIDO: Declarar targetPerson una sola vez
+            Person? targetPerson = null;
 
-            // ✅ ELIMINADO: Validación de pago duplicado
-            // Ahora se permiten múltiples pagos por mes
+            // ✅ MODIFICADO: Validar permisos para crear pagos
+            if (!currentPerson.Admin)
+            {
+                // Usuario normal: solo puede crear pagos para sí mismo
+                obj.PeoplesId = currentPerson.Id;
+                targetPerson = currentPerson;
+            }
+            else
+            {
+                // Admin: validar que la persona objetivo exista
+                targetPerson = await _db.Peoples.FindAsync(obj.PeoplesId);
+                if (targetPerson == null)
+                {
+                    TempData["Error"] = "La persona especificada no existe.";
+                    return RedirectToAction("Index");
+                }
+            }
 
             if (ModelState.IsValid)
             {
@@ -133,7 +194,11 @@ namespace DiaryApp.Controllers
                     catch (Exception ex)
                     {
                         ModelState.AddModelError("", $"Error al subir el comprobante: {ex.Message}");
-                        ViewBag.Peoples = new SelectList(new[] { currentPerson }, "Id", "Nombre", currentPerson.Id);
+                        ViewBag.Peoples = new SelectList(new[] { targetPerson }, "Id", "Nombre", obj.PeoplesId);
+                        ViewBag.PersonName = targetPerson?.Nombre;
+                        ViewBag.PersonImageUrl = targetPerson?.ImagenUrl;
+                        ViewBag.PersonId = targetPerson?.Id;
+                        ViewBag.IsViewingOtherPerson = currentPerson.Id != targetPerson?.Id;
                         return View(obj);
                     }
                 }
@@ -141,10 +206,22 @@ namespace DiaryApp.Controllers
                 _db.Payments.Add(obj);
                 await _db.SaveChangesAsync();
                 TempData["Success"] = "Pago registrado exitosamente";
+                
+                // ✅ Redirigir correctamente según contexto
+                if (currentPerson.Admin && obj.PeoplesId != currentPerson.Id)
+                {
+                    return RedirectToAction("Index", new { personId = obj.PeoplesId });
+                }
+                
                 return RedirectToAction("Index");
             }
 
-            ViewBag.Peoples = new SelectList(new[] { currentPerson }, "Id", "Nombre", currentPerson.Id);
+            // ✅ Si llegamos aquí, targetPerson ya está asignado
+            ViewBag.Peoples = new SelectList(new[] { targetPerson }, "Id", "Nombre", obj.PeoplesId);
+            ViewBag.PersonName = targetPerson?.Nombre;
+            ViewBag.PersonImageUrl = targetPerson?.ImagenUrl;
+            ViewBag.PersonId = targetPerson?.Id;
+            ViewBag.IsViewingOtherPerson = currentPerson.Id != targetPerson?.Id;
             return View(obj);
         }
 
@@ -181,14 +258,22 @@ namespace DiaryApp.Controllers
                 return NotFound();
             }
 
-            // Verificar que el pago pertenezca a la persona logueada
-            if (payment.PeoplesId != currentPerson.Id)
+            // ✅ MODIFICADO: Admins pueden editar pagos de cualquiera
+            if (!currentPerson.Admin && payment.PeoplesId != currentPerson.Id)
             {
                 TempData["Error"] = "No tiene permiso para editar este pago.";
                 return RedirectToAction("Index");
             }
 
-            ViewBag.Peoples = new SelectList(new[] { currentPerson }, "Id", "Nombre", currentPerson.Id);
+            var targetPerson = await _db.Peoples.FindAsync(payment.PeoplesId);
+            ViewBag.Peoples = new SelectList(new[] { targetPerson }, "Id", "Nombre", payment.PeoplesId);
+            
+            // ✅ NUEVO: Agregar ViewBag para mostrar si está viendo otra persona
+            ViewBag.PersonName = targetPerson?.Nombre;
+            ViewBag.PersonImageUrl = targetPerson?.ImagenUrl;
+            ViewBag.PersonId = targetPerson?.Id;
+            ViewBag.IsViewingOtherPerson = currentPerson.Id != payment.PeoplesId;
+            
             return View(payment);
         }
 
@@ -214,8 +299,13 @@ namespace DiaryApp.Controllers
                 return RedirectToAction("Index", "Persons");
             }
 
-            // Forzar que el pago sea para la persona logueada (seguridad)
-            obj.PeoplesId = currentPerson.Id;
+            // ✅ MODIFICADO: Validar permisos
+            if (!currentPerson.Admin)
+            {
+                // Usuario normal: forzar que el pago sea para sí mismo
+                obj.PeoplesId = currentPerson.Id;
+            }
+            // Admin: puede mantener el PeoplesId original del pago
 
             if (ModelState.IsValid)
             {
@@ -237,7 +327,12 @@ namespace DiaryApp.Controllers
                     catch (Exception ex)
                     {
                         ModelState.AddModelError("", $"Error al actualizar el comprobante: {ex.Message}");
-                        ViewBag.Peoples = new SelectList(new[] { currentPerson }, "Id", "Nombre", currentPerson.Id);
+                        var person = await _db.Peoples.FindAsync(obj.PeoplesId);
+                        ViewBag.Peoples = new SelectList(new[] { person }, "Id", "Nombre", obj.PeoplesId);
+                        ViewBag.PersonName = person?.Nombre;
+                        ViewBag.PersonImageUrl = person?.ImagenUrl;
+                        ViewBag.PersonId = person?.Id;
+                        ViewBag.IsViewingOtherPerson = currentPerson.Id != obj.PeoplesId;
                         return View(obj);
                     }
                 }
@@ -245,10 +340,22 @@ namespace DiaryApp.Controllers
                 _db.Payments.Update(obj);
                 await _db.SaveChangesAsync();
                 TempData["Success"] = "Pago actualizado exitosamente";
+                
+                // ✅ Redirigir correctamente según contexto
+                if (currentPerson.Admin && obj.PeoplesId != currentPerson.Id)
+                {
+                    return RedirectToAction("Index", new { personId = obj.PeoplesId });
+                }
+                
                 return RedirectToAction("Index");
             }
 
-            ViewBag.Peoples = new SelectList(new[] { currentPerson }, "Id", "Nombre", currentPerson.Id);
+            var targetPerson = await _db.Peoples.FindAsync(obj.PeoplesId);
+            ViewBag.Peoples = new SelectList(new[] { targetPerson }, "Id", "Nombre", obj.PeoplesId);
+            ViewBag.PersonName = targetPerson?.Nombre;
+            ViewBag.PersonImageUrl = targetPerson?.ImagenUrl;
+            ViewBag.PersonId = targetPerson?.Id;
+            ViewBag.IsViewingOtherPerson = currentPerson.Id != obj.PeoplesId;
             return View(obj);
         }
 
@@ -285,8 +392,8 @@ namespace DiaryApp.Controllers
                 return NotFound();
             }
 
-            // Verificar que el pago pertenezca a la persona logueada
-            if (payment.PeoplesId != currentPerson.Id)
+            // ✅ MODIFICADO: Admins pueden eliminar pagos de cualquiera
+            if (!currentPerson.Admin && payment.PeoplesId != currentPerson.Id)
             {
                 TempData["Error"] = "No tiene permiso para eliminar este pago.";
                 return RedirectToAction("Index");
@@ -324,12 +431,14 @@ namespace DiaryApp.Controllers
                 return NotFound();
             }
 
-            // Verificar que el pago pertenezca a la persona logueada
-            if (payment.PeoplesId != currentPerson.Id)
+            // ✅ MODIFICADO: Admins pueden eliminar pagos de cualquiera
+            if (!currentPerson.Admin && payment.PeoplesId != currentPerson.Id)
             {
                 TempData["Error"] = "No tiene permiso para eliminar este pago.";
                 return RedirectToAction("Index");
             }
+
+            var targetPersonId = payment.PeoplesId;
 
             // Eliminar comprobante de Azure Blob Storage
             if (!string.IsNullOrEmpty(payment.ComprobanteUrl))
@@ -347,6 +456,13 @@ namespace DiaryApp.Controllers
             _db.Payments.Remove(payment);
             await _db.SaveChangesAsync();
             TempData["Success"] = "Pago eliminado exitosamente";
+            
+            // ✅ Redirigir correctamente según contexto
+            if (currentPerson.Admin && targetPersonId != currentPerson.Id)
+            {
+                return RedirectToAction("Index", new { personId = targetPersonId });
+            }
+            
             return RedirectToAction("Index");
         }
     }

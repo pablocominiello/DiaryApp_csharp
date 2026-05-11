@@ -16,6 +16,44 @@
                    HorizontalOptions="Center"
                    Margin="0,0,0,10" />
 
+            <!-- ✅ NUEVO: Información de la App -->
+            <Frame BorderColor="Purple" 
+                   BackgroundColor="Lavender" 
+                   Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="📱 Información de la Aplicación"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="DarkMagenta" />
+                    
+                    <Grid ColumnDefinitions="Auto,*" 
+                          RowDefinitions="Auto,Auto" 
+                          ColumnSpacing="10" 
+                          RowSpacing="8">
+                        
+                        <Label Grid.Row="0" Grid.Column="0" 
+                               Text="Versión:" 
+                               FontAttributes="Bold"
+                               VerticalOptions="Center" />
+                        <Label Grid.Row="0" Grid.Column="1" 
+                               Text="{Binding AppVersion}" 
+                               FontSize="16"
+                               TextColor="DarkMagenta"
+                               VerticalOptions="Center" />
+                        
+                        <Label Grid.Row="1" Grid.Column="0" 
+                               Text="Build:" 
+                               FontAttributes="Bold"
+                               VerticalOptions="Center" />
+                        <Label Grid.Row="1" Grid.Column="1" 
+                               Text="{Binding AppBuild}" 
+                               FontSize="16"
+                               TextColor="DarkMagenta"
+                               VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
             <!-- Modo de conexión -->
             <Frame BorderColor="LightBlue" 
                    BackgroundColor="AliceBlue" 
